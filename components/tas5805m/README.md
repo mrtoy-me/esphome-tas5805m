@@ -77,8 +77,8 @@ Note: that the component allows defining Dac Mode in YAML and cannot be altered 
 | Speaker Connection | ![image](https://github.com/user-attachments/assets/8e5e9c38-2696-419b-9c5b-d278c655b0db) | ![image](https://github.com/user-attachments/assets/8aba6273-84c4-45a8-9808-93317d794a44)
 
 
-## Mixer controls
-Mixer settings allow mixing of channel signals and route them to the appropriate audio channel.<BR>
+## Mixer Mode
+Mixer mode allows mixing of channel signals and route them to the appropriate audio channel.<BR>
 The typical setup for the mixer is to send Left channel audio to the Left driver, and Right channel to the Right.<BR>
 A common alternative is to combine both channels into true Mono (you need to reduce both to -3Db to compensate for signal doubling).<BR>
 In BTL Dac Mode, the mixer mode can be set to STEREO, INVERSE_STEREO, MONO, LEFT or RIGHT while<BR>
