@@ -1,7 +1,7 @@
 esphome:
   name: louder-rover
   friendly_name: Louder-Rover
-  min_version: 2025.7.1
+  min_version: 2025.7.2
   platformio_options:
     board_build.flash_mode: dio
   on_boot:
