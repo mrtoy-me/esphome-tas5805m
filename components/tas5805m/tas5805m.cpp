@@ -148,7 +148,7 @@ void Tas5805mComponent::loop() {
   // settings are only refreshed once
   // disable 'loop' once refresh settings are completed
   if (this->refresh_settings_complete_) {
-    this->disable_loop(); // requires Esphome 2025.7.0
+    //this->disable_loop(); // requires Esphome 2025.7.0
     return;
   }
 
