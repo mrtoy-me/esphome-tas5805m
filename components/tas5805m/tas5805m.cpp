@@ -212,11 +212,8 @@ void Tas5805mComponent::update() {
     uint32_t current_time = millis();
     this->update_delay_finished_ = ((current_time - this->last_update_time_) > INITIAL_UPDATE_DELAY);
 
-    if(!this->update_delay_finished_) {
-      this->last_update_time_ = current_time;
-      return;
-    }
-
+    if(!this->update_delay_finished_) return;
+  
     // INITIAL_UPDATE_DELAY is finished, clear faults registers and zero fault counter
     // return and start checking faults from next update interval
     if (!this->initialise_fault_registers()) {
