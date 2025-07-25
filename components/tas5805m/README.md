@@ -347,8 +347,9 @@ Configuration variables:
 
 # YAML examples in this Repository
 The following example YAML configurations are provided under the **Example YAML** directory.<BR>
-Note that these example configurations are expressly provided under the **Disclaimer of Warranty**<BR>
-and **Limititation of Liability** conditions of GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007.<BR>
+Note that this component and these example configurations are expressly provided under the<BR>
+**Disclaimer of Warranty** and **Limititation of Liability** conditions of GNU GENERAL PUBLIC<BR>
+LICENSE Version 3, 29 June 2007.<BR>
 
 - ESP32-S3 Louder with Speaker Mediaplayer handling audio in **esp32S3_louder_idf_media.yaml**<BR>
 - ESP32 Louder with Speaker Mediaplayer handling audio in **esp32_louder_idf_media.yaml**<BR><BR>
