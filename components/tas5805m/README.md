@@ -1,10 +1,10 @@
 # ESPHome component for ESP32-S3 Louder and ESP32 Louder
-The ESP32-S3 Louder and ESP32 Louder uses a TAS5805M DAC. This ESPHome external component<BR>
-is based on the following ESP32 Platform TAS5805M DAC driver:<BR>
-https://github.com/sonocotta/esp32-tas5805m-dac/tree/main by Andriy Malyshenko<BR>
-which is licenced under GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007.<BR>
-Information from this repository has also been used/reproduced in this read.me to provide a better<BR>
-understanding of how to use this component to generate firmware using Esphome Builder.<BR>
+The ESP32-S3 Louder and ESP32 Louder uses a TAS5805M DAC. This ESPHome external component
+is based on the following ESP32 Platform TAS5805M DAC driver:
+https://github.com/sonocotta/esp32-tas5805m-dac/tree/main by Andriy Malyshenko
+which is licenced under GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007.
+Information from this repository has also been used/reproduced in this read.me to provide
+a better understanding of how to use this component to generate firmware using Esphome Builder.
 
 # Usage: Tas5805m component on Github
 This component requires Esphome version 2025.7.0 or later.
@@ -18,27 +18,27 @@ external_components:
 ```
 
 # Overview
-This component is specifically intended for use with ESP32-S3 Louder or ESP32 Louder<BR>
-which both have a TAS5805M DAC for producing audio.<BR>
-This component uses the Esphome ESP_IDF framwork and must be configured accordingly.<BR>
-While this component works with both versions of the "Louder", the ESP32-S3 Louder<BR>
-has larger PSRAM and hence has better performance than the ESP32 Louder.<BR>
+This component is specifically intended for use with ESP32-S3 Louder or ESP32 Louder
+which both have a TAS5805M DAC for producing audio.
+This component uses the Esphome ESP_IDF framwork and must be configured accordingly.
+While this component works with both versions of the "Louder", the ESP32-S3 Louder
+has larger PSRAM and hence has better performance than the ESP32 Louder.
 
-The component allows many features of the TAS5808M DAC to be configured<BR>
-prior to firmware generation or configured/controlled through Homeassistant.<BR>
-Fault sensors can also be configured, so their status is visible in Homeassistant.<BR>
+The component allows many features of the TAS5808M DAC to be configured
+prior to firmware generation or configured/controlled through Homeassistant.
+Fault sensors can also be configured, so their status is visible in Homeassistant.
 
-The component YAML configuration uses the esphome Audio DAC Core component,<BR>
-and is configured under **audio_dac:** as **- platform: tas5805m**<BR>
+The component YAML configuration uses the esphome Audio DAC Core component,
+and is configured under **audio_dac:** as **- platform: tas5805m**
 
-The TAS5805M DAC is controlled by I2C so the component requires configuration of<BR>
-**i2c:** with **sda:** and **scl:** pins.<BR>
+The TAS5805M DAC is controlled by I2C so the component requires configuration of
+**i2c:** with **sda:** and **scl:** pins.
 
-Appropriate configuration of psram, i2s_audio, speaker and mediaplayer are required.<BR>
-Example YAML configurations are provided and are listed at the end of this read.me<BR>
+Appropriate configuration of psram, i2s_audio, speaker and mediaplayer are required.
+Example YAML configurations are provided and are listed at the end of this document.
 
 ## Component Features
-The component communicates with ESP32 Louder's TAS5805M and provides the following features:<BR>
+The component communicates with ESP32 Louder's TAS5805M and provides the following features:
 - initialise TAS5805M DAC
 - enable/disable TAS5805M DAC
 - adjust TAS5805M maximum and minimum volume level
@@ -59,15 +59,17 @@ YAML configuration includes:
 
 # Louder TAS5805M Features
 ## Analog Gain and Digital Volume
-The analog gain setting ensures that the output signal is not clipped at different supply voltage levels.<BR>
-With TAS5805M analog gain set at the appropriate level, the TAS5805M digital volume is used<BR>
-to set the audio volume. Keep in mind, it is perfectly safe to set the analog gain at a lower level.<BR>
-Note: that the component allows defining analog gain in YAML and cannot be altered at runtime.<BR>
+The analog gain setting ensures that the output signal is not clipped at different supply voltage levels.
+With TAS5805M analog gain set at the appropriate level, the TAS5805M digital volume
+is used to set the audio volume. Keep in mind, it is perfectly safe to set the
+analog gain at a lower level.
+Note: that the component allows defining analog gain in YAML and cannot be altered at runtime.
 
 ## DAC Mode
-TAS5805M has a bridge mode of operation, that causes both output drivers to synchronize and push out<BR>
-the same audio with double the power. Typical setup for each of the Dac Modes is shown in the following table.<BR>
-Note: that the component allows defining Dac Mode in YAML and cannot be altered at runtime.<BR>
+TAS5805M has a bridge mode of operation, that causes both output drivers to synchronize
+and push out the same audio with double the power. Typical setup for each of the
+Dac Modes is shown in the following table.
+Note: the component allows defining Dac Mode in YAML and cannot be altered at runtime.
 
 |   | BTL (default, STEREO) | PBTL (MONO, rougly double power) |
 |---|-----------------------|---------------------------|
@@ -78,18 +80,20 @@ Note: that the component allows defining Dac Mode in YAML and cannot be altered 
 
 
 ## Mixer Mode
-Mixer mode allows mixing of channel signals and route them to the appropriate audio channel.<BR>
-The typical setup for the mixer is to send Left channel audio to the Left driver, and Right channel to the Right.<BR>
-A common alternative is to combine both channels into true Mono (you need to reduce both to -3Db to compensate for signal doubling).<BR>
-In BTL Dac Mode, the mixer mode can be set to STEREO, INVERSE_STEREO, MONO, LEFT or RIGHT while<BR>
-in PBTL Dac Mode, the mixer mode can be set to MONO, LEFT or RIGHT.<BR>
+Mixer mode allows mixing of channel signals and route them to the appropriate audio
+channel. The typical setup for the mixer is to send Left channel audio to the Left driver,
+and Right channel to the Right. A common alternative is to combine both channels into
+true Mono (you need to reduce both to -3Db to compensate for signal doubling).
+In BTL Dac Mode, the mixer mode can be set to STEREO, INVERSE_STEREO, MONO, LEFT or RIGHT while
+in PBTL Dac Mode, the mixer mode can be set to MONO, LEFT or RIGHT.
 
 
 ## EQ Band Gains
-TAS5805M has a powerful 15-channel EQ that allows defining each channel's transfer function using BQ coefficients.<BR>
-For practical purposes, the audio range is split into 15 bands, defining for each a -15 to +15 dB gain adjustment range<BR>
-and appropriate bandwidth to cause mild overlap. This keeps the curve flat enough to not cause distortions<BR>
-even in extreme settings, but also allows a wide range of transfer characteristics.<BR>
+TAS5805M has a powerful 15-channel EQ that allows defining each channel's transfer function
+using BQ coefficients. For practical purposes, the audio range is split into 15 bands,
+defining for each a -15 to +15 dB gain adjustment range and appropriate bandwidth to
+cause mild overlap. This keeps the curve flat enough to not cause distortions
+even in extreme settings, but also allows a wide range of transfer characteristics.
 
 | Band | Center Frequency (Hz) | Frequency Range (Hz) | Q-Factor (Approx.) |
 |------|-----------------------|----------------------|--------------------|
@@ -110,20 +114,24 @@ even in extreme settings, but also allows a wide range of transfer characteristi
 
 
 ## Fault States
-TAS5805M has a fault detection system that allows it to self-diagnose issues with power, data signal, short circuits, overheating etc.<BR>
-The general pattern for fault detection is periodic check of fault registers, and when there are any faults, provide notification<BR>
-through sensor/s and clear any fault afterwards.<BR>
-<BR>
+TAS5805M has a fault detection system that allows it to self-diagnose issues with
+power, data signal, short circuits, overheating etc. The general pattern for
+fault detection is periodic check of fault registers, and when there are any
+faults, provide notification through sensor/s and clear any fault afterwards.
+
 
 # Activation of Mixer mode and EQ Gains
-For software configuration of the Mixer and EQ Gains, the Louder's TAS5805M must have received a stable I2S signal.<BR>
-If a Mixer setting (other than default) or EQ Band Gain Numbers are configured, what this means for this component is that<BR>
-before the component writes these settings to the TAS5805M, the TAS5805M must have received some audio.<BR>
+For software configuration of the Mixer and EQ Gains, the Louder's TAS5805M
+must have received a stable I2S signal. If a Mixer setting (other than default)
+and/or EQ Band Gain Numbers are configured, what this means for this component
+is that before the component writes these settings to the TAS5805M,
+the TAS5805M must have received some audio.
 
 ## Typical Use Case - Speaker Mediaplayer
-The typical way of handling this requirement is where speaker mediaplayer component is configured to play audio during boot.<BR>
-In this case, a short sound file is configured under **mediaplayer:** and configuration added under **esphome:**<BR>
-to play that short sound at the correct point in the boot process.<BR>
+The typical way of handling this requirement is where speaker mediaplayer component
+is configured to play audio during boot. In this case, a short sound file is
+configured under **mediaplayer:** and configuration added under **esphome:**
+to play that short sound at the correct point in the boot process.
 
 Configuration required to be included under **mediaplayer:** YAML is:
 ```
@@ -138,17 +146,18 @@ on_boot:
     then:
       media_player.speaker.play_on_device_media_file: startup_sync_sound
 ```
-The **audio_dac:** has an optional configuration variable called **refresh_eq:**<BR>
-The default configuration of **refresh_eq: BY_GAIN** matches the above use case and<BR>
-therefore is not required(can be omitted) from the **audio_dac:** YAML configuration.<BR>
+The **audio_dac:** has an optional configuration variable called **refresh_eq:**
+The default configuration of **refresh_eq: BY_GAIN** matches the above use case and
+therefore is not required(can be omitted) from the **audio_dac:** YAML configuration.
 
 ## Use Case where Speaker Mediaplayer is not used (eg using a SnapCast client component)
-Another use case, is use of Snapcast client component instead of Speaker Mediaplayer component to produce the required audio.<BR>
-In this use case, the following "workaround" is necessary to play audio through the Louder's TAS58065M before<BR>
-the component writes the Mixer and EQ Gain settings to the TAS5805M. This workaround requires the user<BR>
-to start playing audio then turn on the Enable EQ Switch. The following changed configuration is required:<BR>
+Another use case, is use of Snapcast client component instead of Speaker Mediaplayer component
+to produce the required audio. In this use case, the following "workaround" is necessary
+to play audio through the Louder's TAS58065M before the component writes the Mixer and
+EQ Gain settings to the TAS5805M. This workaround requires the user to start playing audio
+then turn on the Enable EQ Switch. The following changed configuration is required:
 
-1) Configure **audio_dac:** with optional configuration variable and value **refresh_eq:  BY_GAIN**
+1) Configure **audio_dac:** with optional configuration variable and value **refresh_eq: BY_SWITCH**
 2) Configure **switch: - platform: tas5805m** with **enable_eq:** as follows:
 ```
 switch:
@@ -180,43 +189,48 @@ audio_dac:
     update_interval: 10s
 ```
 Configuration variables:
-- **enable_pin:** (*Required*): GPIOxx, enable pin of ESP32 Louder<BR>
+- **enable_pin:** (*Required*): GPIOxx, enable pin of ESP32 Louder
 
-- **analog_gain:** (*Optional*): dB values from -15.5dB to 0dB in 0.5dB increments<BR>
-  Defaults to -15.5dbB. A setting of -15.5db is typical when 5v is used to power the Louder<BR>
+- **analog_gain:** (*Optional*): dB values from -15.5dB to 0dB in 0.5dB increments
+  Defaults to -15.5dbB. A setting of -15.5db is typical when
+  5v is used to power the Louder
 
-- **dac_mode:** (*Optional*): valid values of BTL or PBTL. Defaults to BTL<BR>
+- **dac_mode:** (*Optional*): valid values BTL or PBTL. Defaults to BTL
 
-- **mixer_mode:** (*Optional*): values of STEREO, INVERSE_STEREO, MONO, LEFT or RIGHT<BR>
-  Defaults to STEREO. Note: for PBTL Dac Mode, only MONO, LEFT or RIGHT are valid.<BR>
+- **mixer_mode:** (*Optional*): values STEREO, INVERSE_STEREO, MONO, LEFT or RIGHT
+  Defaults to STEREO. Note: for PBTL Dac Mode, only MONO, LEFT or RIGHT are valid.
 
-- **volume_max:** (*Optional*): whole dB values from -103dB to 24dB. Defaults to 24dB<BR>
+- **volume_max:** (*Optional*): whole dB values from -103dB to 24dB. Defaults to 24dB
 
-- **volume_min:** (*Optional*): whole dB values from -103dB to 24dB. Defaults to -103dB<BR>
+- **volume_min:** (*Optional*): whole dB values from -103dB to 24dB. Defaults to -103dB
 
-- **update_interval:** (*Optional*): defines the interval (seconds) at which faults will be checked<BR>
-  and then if detected will be cleared at next interval. Defaults to 30s.<BR>
+- **update_interval:** (*Optional*): defines the interval (seconds) at which faults will be
+  checked and then if detected will be cleared at next interval. Defaults to 30s.
 
-- **refresh_eq:** (*Optional*): valid values BY_GAIN or BY_SWITCH. Defaults to BY_GAIN<BR>
-  This setting can normally be ignored and omitted if you are using Speaker Mediaplayer component and<BR>
-  is intended for use when Snapcast client component is used instead of Speaker Mediaplayer.<BR>
-  When a Snapcast client component is configured, the BY_SWITCH value should be used.<BR>
-  See information under "Activation of Mixer mode and EQ Gains" section above and the provided YAML examples.<BR>
+- **refresh_eq:** (*Optional*): valid values BY_GAIN or BY_SWITCH. Defaults to BY_GAIN
+  This setting can normally be ignored and omitted if you are using Speaker
+  Mediaplayer component and is intended for use when Snapcast client component
+  is used instead of Speaker Mediaplayer. When a Snapcast client component is
+  configured, the BY_SWITCH value should be used. See information under
+  "Activation of Mixer mode and EQ Gains" section above and provided YAML examples.
 
 
 ## Switches
-Two tas5805m platform switches can be configured to provide switches in Homeassistant.<BR>
-- Enable Louder Switch, more specifically places TAS5805M into Play mode or into low power Sleep mode<BR>
-- Enable EQ Control Switch which switches the TAS5805M DAC EQ control On/Off. This switch works<BR>
-  in conjunction with configuration of tas5805m platform numbers which configure gain of EQ Bands.<BR>
+Two tas5805m platform switches can be configured to provide switches
+in Homeassistant.
+- Enable Louder Switch, more specifically places TAS5805M into Play mode or
+  into low power Sleep mode
+- Enable EQ Control Switch which switches the TAS5805M DAC EQ control On/Off.
+  This switch works in conjunction with configuration of tas5805m
+  platform numbers which configure gain of EQ Bands.
 
-The example YAML also includes an **interval:** and **mediaplayer:** configuration to trigger<BR>
-Enable Louder Switch Off when there is no music player activity (idle or paused) for the defined time and<BR>
-when music player activity is detected (by mediaplayer), the Enable Louder Switch is triggered On .<BR>
-The example interval configuration requires some configuration of **mediaplayer:**<BR>
-which is also shown in the YAML examples.<BR>
+The example YAML also includes an **interval:** and **mediaplayer:** configuration to
+trigger Enable Louder Switch Off when there is no music player activity (idle or paused)
+for the defined time and when music player activity is detected (by mediaplayer),
+the Enable Louder Switch is triggered On. The example interval configuration also
+requires configuration of **mediaplayer:** which is also shown in the YAML examples.
 
-Configuration of tas5805m switches in typical use case:<BR>
+Configuration of tas5805m switches in typical use case:
 
 ```switch:
   - platform: tas5805m
@@ -229,26 +243,28 @@ Configuration of tas5805m switches in typical use case:<BR>
       restore_mode: RESTORE_DEFAULT_ON
 ```
 Configuration headers:
-- **enable_dac:** (*Optional*): allows the definition of a switch to enable/disable the TAS5805M DAC.<BR>
-Switch On (enabled) places TAS5805M into Play mode while Switch Off (disabled)<BR>
-places TAS5805M into low power Sleep mode.<BR>
+- **enable_dac:** (*Optional*): allows the definition of a switch to enable/disable
+  the TAS5805M DAC. Switch On (enabled) places TAS5805M into Play mode while
+  Switch Off (disabled) places TAS5805M into low power Sleep mode.
     Configuration variables:
-    - **restore_mode:** (optional but recommended): **RESTORE_DEFAULT_ON** is recommended.<BR>
+    - **restore_mode:** (optional but recommended): **ALWAYS_ON** is recommended.
 
-- **enable_eq:** (*Optional*): allows the definition of a switch to turn on/off the TAS5805M DAC<BR>
-EQ Control Mode. Switch On enables TAS5805M EQ Control while Switch Off disables TAS5805M EQ Control.<BR>
+- **enable_eq:** (*Optional*): allows the definition of a switch to turn on/off
+  the TAS5805M DAC EQ Control Mode. Switch On enables TAS5805M EQ Control while
+  Switch Off disables TAS5805M EQ Control.
     Configuration variables:
-    - **restore_mode:** (optional but recommended): **RESTORE_DEFAULT_ON** is recommended<BR>
-      For typical use case where speaker mediaplayer is use for audio.<BR>
-      For use case, where SnapCast client component is used instead of Speaker mediaplayer component,<BR>
-      **ALWAYS_OFF** is recommended.<BR>
+    - **restore_mode:** (optional but recommended): **RESTORE_DEFAULT_ON** is
+      recommended for typical use case where speaker mediaplayer is use for audio.
+      For use case, where SnapCast client component is used instead of
+      Speaker mediaplayer component, **ALWAYS_OFF** is recommended.
 
 ## EQ Band Gain Numbers
-15 EQ Band Gain Numbers can be configured for controlling the gain of each EQ Band in Homeassistant.<BR>
-The number configuration heading for each number is shown below with an example name configured.<BR>
-Defining **number: -platform: tas5805m** requires all 15 EQ Gain Band headings to be configured.<BR>
-For TAS5805M EQ Band Gains to configure correctly requires some addition YAML configuration, refer<BR>
-to the "Activation of Mixer mode and EQ Gains" section above and the provided YAML examples.<BR>
+15 EQ Band Gain Numbers can be configured for controlling the gain of each EQ Band
+in Homeassistant. The number configuration heading for each number is shown below
+with an example name configured. Defining **number: -platform: tas5805m** requires
+all 15 EQ Gain Band headings to be configured. For TAS5805M EQ Band Gains to
+configure correctly requires some addition YAML configuration, refer to the
+"Activation of Mixer mode and EQ Gains" section above and provided YAML examples.
 
 ```
 number:
@@ -286,21 +302,22 @@ number:
 ```
 
 ## Announce Volume Template Number
-The example YAML defines an Announce Volume template number which can be used in conjuction<BR>
-with the **mediaplayer:** YAML configurations for adjusting the announcement pipeline audio<BR>
-volume separately to the media pipeline volume. This is useful for a Text-to-Speech announcements<BR>
-that may have a different volume level to the audio playing through the media pipeline.<BR>
-The YAML examples provide an example of how this can be configured.<BR>
+The example YAML defines an Announce Volume template number which can be used in
+conjuction with the **mediaplayer:** YAML configurations for adjusting the
+announcement pipeline audio volume separately to the media pipeline volume.
+This is useful for a Text-to-Speech announcements that may have a different
+volume level to the audio playing through the media pipeline.
+The YAML examples provide an example of how this can be configured.
 
 ## Binary Sensors
-Binary sensors can be configured which correspond to fault codes from the TAS5805M.<BR>
-The tas5805m binary sensor platform has configuration headings for each binary sensor<BR>
-as shown below with an example name configured.<BR>
-All 12 binary sensors can be optionally defined but it is recommended that at minimum,<BR>
-one binary sensor **have_fault:** is configured. The **have_fault:** binary sensor<BR>
-activates if any the TAS5805M faults conditions activate.<BR>
-Note: binary sensors are updated at the **update interval:** defined under **audio_dac:** or<BR>
-if not defined default to 30s.<BR>
+Binary sensors can be configured which correspond to fault codes from the TAS5805M.
+The tas5805m binary sensor platform has configuration headings for each binary sensor
+as shown below with an example name configured.
+All 12 binary sensors can be optionally defined but it is recommended that at minimum,
+one binary sensor **have_fault:** is configured. The **have_fault:** binary sensor
+activates if any the TAS5805M faults conditions activate.
+Note: binary sensors are updated at the **update interval:** defined under **audio_dac:** or
+if not defined default to 30s.
 
 ```
 binary_sensor:
@@ -332,9 +349,9 @@ binary_sensor:
 ```
 
 ## Sensor
-Under the tas5805m sensor platform, one sensor under configuration heading **faults_cleared:**<BR>
-can be optionally configured. This sensor counts the number of time a fault was detected<BR>
-and then subsequently cleared by the component.<BR>
+Under the tas5805m sensor platform, one sensor under configuration heading
+**faults_cleared:** can be optionally configured. This sensor counts the
+number of times a fault was detected and subsequently cleared by the component.
 ```
 sensor:
   - platform: tas5805m
@@ -342,18 +359,21 @@ sensor:
       name: "Times Faults Cleared"
 ```
 Configuration variables:
-- **update interval:** (*Optional*): The interval at which the sensor is updated. Defaults to 60s<BR>
+- **update interval:** (*Optional*): The interval at which the sensor is updated.
+  Defaults to 60s
 
 
 # YAML examples in this Repository
-The following example YAML configurations are provided under the **Example YAML** directory.<BR>
-Note that these example configurations are expressly provided under the **Disclaimer of Warranty**<BR>
-and **Limititation of Liability** conditions of GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007.<BR>
+The following example YAML configurations are provided under the
+**Example YAML** directory.
+Note that this component and these example configurations are expressly provided
+under the **Disclaimer of Warranty** and **Limititation of Liability** conditions
+of GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007.
 
-- ESP32-S3 Louder with Speaker Mediaplayer handling audio in **esp32S3_louder_idf_media.yaml**<BR>
-- ESP32 Louder with Speaker Mediaplayer handling audio in **esp32_louder_idf_media.yaml**<BR><BR>
+- ESP32-S3 Louder with Speaker Mediaplayer handling audio in **esp32S3_louder_idf_media.yaml**
+- ESP32 Louder with Speaker Mediaplayer handling audio in **esp32_louder_idf_media.yaml**
 
 - ESP32-S3 Louder with esphome-snapclient https://github.com/c-MM/esphome-snapclient
-  handling audio in **esp32S3_snapclient_idf_media.yaml**<BR>
+  handling audio in **esp32S3_snapclient_idf_media.yaml**
 - ESP32-S3 Louder with esphome-snapclient https://github.com/c-MM/esphome-snapclient
-  handling audio in **esp32S3_snapclient_idf_media.yaml**<BR>
+  handling audio in **esp32S3_snapclient_idf_media.yaml**
