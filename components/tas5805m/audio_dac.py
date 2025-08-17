@@ -81,7 +81,7 @@ CONFIG_SCHEMA = cv.All(
             ),
         }
     )
-    .extend(cv.polling_component_schema("30s"))
+    .extend(cv.polling_component_schema("4s"))
     .extend(i2c.i2c_device_schema(0x2D))
     .add_extra(validate_config),
     cv.only_with_esp_idf,
