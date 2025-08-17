@@ -76,7 +76,7 @@ audio_dac:
     mixer_mode: STEREO
     volume_max: 0dB
     volume_min: -60db
-    update_interval: 10s
+    update_interval: 4s
 
 i2s_audio:
   i2s_lrclk_pin: GPIO25
@@ -144,6 +144,7 @@ binary_sensor:
   - platform: tas5805m
     have_fault:
       name: Any Faults
+      exclude: CLOCK_FAULT
     left_channel_dc_fault:
       name: Left Channel DC Fault
     right_channel_dc_fault:

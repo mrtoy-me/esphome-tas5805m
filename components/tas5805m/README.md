@@ -319,18 +319,18 @@ All 12 binary sensors can be optionally defined but it is recommended that at mi
 one binary sensor **have_fault:** is configured. The **have_fault:** binary sensor
 activates if any the TAS5805M faults conditions activate.
 
-**have_fault** Configuration variable:
-  - **exclude:** (optional): **CLOCK_FAULT** allows clock fault to be excluded from have_fault binary sensor.
+**have_fault:** Configuration variable:
+  - **exclude:** (optional): **CLOCK_FAULT** allows clock faults to be excluded from have_fault binary sensor.
     Default is not to exclude clock faults from the have_fault binary sensor.
 
-**over_temp_warning:** Example Yaml configuration to reduce volume on over temperature warnng:
-  To attempt to mitigate a over temperature warning, the volume can be decreased using the following YAML.
-  For this YAML to take effect, the **mediaplayer:** configuration must include configuration
-  of the **volume_increment:**. Typically 10% should be suitable but depends on the dB range defined
-  by the **volume_max:** and **volume_min:** under **audio_dac:**. The % equivalent to around 6dB decrease
-  should have a benficial effect, but also depend on the updateInterval frequency for checking faults.
-**Note:** all binary sensors are updated at the **update interval:** defined under **audio_dac:** or
-if not defined defaults to 4s. For ESP32-S3 Louder, update interval can be reduced as low as 1s.
+**over_temp_warning:** Example Yaml configuration to reduce volume on over temperature warning:
+  - To attempt to mitigate an over temperature warning, the volume can be decreased using the following YAML.
+    For this YAML to take effect, the **mediaplayer:** configuration must include configuration
+    of the **volume_increment:**. Typically 10% should be suitable but depends on the dB range defined
+    by the **volume_max:** and **volume_min:** under **audio_dac:**. The % equivalent to around 6dB decrease
+    should have a benficial effect, but also depends on the update interval for checking faults.
+  **Note:** all binary sensors are updated at the **update interval:** defined under **audio_dac:** or
+  if not defined defaults to 4s. For ESP32-S3 Louder, update interval can be reduced as low as 1s.
 
 Example configuration of Tas5805m Binary Sensors:
 ```
