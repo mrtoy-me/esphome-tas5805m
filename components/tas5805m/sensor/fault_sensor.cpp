@@ -7,7 +7,8 @@ namespace tas5805m {
 static const char *const TAG = "tas5805m.sensor";
 
 void  FaultSensor::dump_config() {
-  LOG_SENSOR("", "Tas5805m Times Faults Cleared sensor:", this->times_faults_cleared_sensor_);
+  ESP_LOGCONFIG(TAG, "Tas5805m Sensor:");
+  LOG_SENSOR("  ", "Times Faults Cleared", this->times_faults_cleared_sensor_);
   LOG_UPDATE_INTERVAL(this);
 }
 
