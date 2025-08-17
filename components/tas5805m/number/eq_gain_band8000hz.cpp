@@ -15,7 +15,7 @@ void EqGainBand8000hz::setup() {
 }
 
 void EqGainBand8000hz::dump_config() {
-  ESP_LOGCONFIG(TAG, "Tas5805m EQ Gain 8000Hz Band: '%s'", this->get_name().c_str());
+  ESP_LOGCONFIG(TAG, "  8000Hz Band '%s'", this->get_name().c_str());
 }
 
 void EqGainBand8000hz::control(float value) {
