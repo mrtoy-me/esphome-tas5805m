@@ -75,7 +75,7 @@ audio_dac:
     analog_gain: -15.5db
     volume_max: -5dB
     volume_min: -60db
-    update_interval: 10s
+    update_interval: 1s
 
 i2s_audio:
   i2s_lrclk_pin: GPIO15
@@ -116,7 +116,7 @@ media_player:
     name: Mediaplayer
     id: louder_mediaplayer
     #task_stack_in_psram: true
-    volume_increment: 0.1%
+    volume_increment: 10%
     volume_initial: 10%
     media_pipeline:
       speaker: media_spk_resampling_input
@@ -228,6 +228,7 @@ binary_sensor:
   - platform: tas5805m
     have_fault:
       name: Any Faults
+      exclude: CLOCK_FAULT
     left_channel_dc_fault:
       name: Left Channel DC Fault
     right_channel_dc_fault:
@@ -250,6 +251,9 @@ binary_sensor:
       name: Over Temperature Shutdown Fault
     over_temp_warning:
       name: Over Temperature Warning
+      on_press:
+        - media_player.volume_down
+
 
 interval:
   - interval: 60s
