@@ -186,7 +186,7 @@ audio_dac:
     mixer_mode: STEREO
     volume_max: 0dB
     volume_min: -60db
-    update_interval: 10s
+    update_interval: 4s
 ```
 Configuration variables:
 - **enable_pin:** (*Required*): GPIOxx, enable pin of ESP32 Louder
@@ -205,7 +205,8 @@ Configuration variables:
 - **volume_min:** (*Optional*): whole dB values from -103dB to 24dB. Defaults to -103dB
 
 - **update_interval:** (*Optional*): defines the interval (seconds) at which faults will be
-  checked and then if detected will be cleared at next interval. Defaults to 30s.
+  checked and then if detected will be cleared. Defaults to 4s. For ESP32-S3 Louder, update 
+  interval can be reduced as low as 1s.
 
 - **refresh_eq:** (*Optional*): valid values BY_GAIN or BY_SWITCH. Defaults to BY_GAIN
   This setting can normally be ignored and omitted if you are using Speaker
