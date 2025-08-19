@@ -252,9 +252,9 @@ void Tas5805mComponent::update() {
   // if there is a fault then clear any faults
   if (this->have_fault_) {
     this->had_fault_last_update_ = true;
-    // if (!this->clear_fault_registers_()) {
-    //   ESP_LOGW(TAG, "%sclearing faults", ERROR);
-    // }
+     if (!this->clear_fault_registers_()) {
+       ESP_LOGW(TAG, "%sclearing faults", ERROR);
+     }
   }
   else {
     this->had_fault_last_update_ = false;
