@@ -174,7 +174,15 @@ void Tas5805mComponent::update() {
       ESP_LOGW(TAG, "%sinitialising faults", ERROR);
     }
     // read and process faults from next update interval
-    //return;
+    return;
+  }
+
+  // if there was a fault last update then clear any faults
+  if (this->have_fault_) {
+    this->had_fault_last_update_ = true;
+     if (!this->clear_fault_registers_()) {
+       ESP_LOGW(TAG, "%sclearing faults", ERROR);
+     }
   }
 
   if (!this->read_fault_registers_()) {
@@ -191,6 +199,8 @@ void Tas5805mComponent::update() {
 
   // skip sensor update and clear faults if there is no possibility of state change in any faults
   if ((!this->had_fault_last_update_) && (!this->have_fault_)) return;
+
+  this->had_fault_last_update_ = false;
 
   #ifdef USE_BINARY_SENSOR
   if (this->have_fault_binary_sensor_ != nullptr) {
@@ -250,15 +260,15 @@ void Tas5805mComponent::update() {
   #endif
 
   // if there is a fault then clear any faults
-  if (this->have_fault_) {
-    this->had_fault_last_update_ = true;
-     if (!this->clear_fault_registers_()) {
-       ESP_LOGW(TAG, "%sclearing faults", ERROR);
-     }
-  }
-  else {
-    this->had_fault_last_update_ = false;
-  }
+  // if (this->have_fault_) {
+  //   this->had_fault_last_update_ = true;
+  //    if (!this->clear_fault_registers_()) {
+  //      ESP_LOGW(TAG, "%sclearing faults", ERROR);
+  //    }
+  // }
+  // else {
+  //   this->had_fault_last_update_ = false;
+  // }
 }
 
 void Tas5805mComponent::dump_config() {
