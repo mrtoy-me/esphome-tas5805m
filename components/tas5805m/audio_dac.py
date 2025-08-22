@@ -7,6 +7,7 @@ from esphome import pins
 from esphome.const import (
     CONF_ID,
     CONF_ENABLE_PIN,
+    CONF_UPDATE_INTERVAL,
 )
 
 CODEOWNERS = ["@mrtoy-me"]
@@ -51,9 +52,16 @@ ANALOG_GAINS = [-15.5, -15, -14.5, -14, -13.5, -13, -12.5, -12, -11.5, -11, -10.
 
 def validate_config(config):
     if config[CONF_DAC_MODE] == "PBTL" and (config[CONF_MIXER_MODE] == "STEREO" or config[CONF_MIXER_MODE] == "STEREO_INVERSE"):
-        raise cv.Invalid("dac_mode: PBTL must have mixer_mode: MONO or RIGHT or LEFT")
+        raise cv.Invalid("Tas5805m Audio Dac dac_mode: PBTL must have mixer_mode: MONO or RIGHT or LEFT")
     if (config[CONF_VOLUME_MAX] - config[CONF_VOLUME_MIN]) < 9:
-        raise cv.Invalid("volume_max must at least 9db greater than volume_min")
+        raise cv.Invalid("Tas5805m Audio Dac volume_max: must at least 9db greater than volume_min:")
+    return config
+
+def validate_update_interval(config):
+    if config[CONF_UPDATE_INTERVAL].total_milliseconds < 1000:
+        raise cv.Invalid(
+            f"Tas5805m Audio Dac update_interval: must be >= 1s"
+        )
     return config
 
 CONFIG_SCHEMA = cv.All(
@@ -81,10 +89,11 @@ CONFIG_SCHEMA = cv.All(
             ),
         }
     )
-    .extend(cv.polling_component_schema("1s"))
+    .extend(cv.polling_component_schema("2s"))
     .extend(i2c.i2c_device_schema(0x2D))
     .add_extra(validate_config),
     cv.only_with_esp_idf,
+    validate_update_interval,
 )
 
 async def to_code(config):

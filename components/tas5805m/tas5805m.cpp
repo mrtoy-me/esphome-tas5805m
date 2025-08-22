@@ -20,10 +20,11 @@ static const uint8_t ESPHOME_MAXIMUM_DELAY = 5;     // milliseconds
 
 // initial delay in 'loop' before writing eq gains to ensure on boot sound has
 // played and tas5805m has detected i2s clock
-static const uint8_t DELAY_LOOPS           = 20;    // 20 loop iterations = ~320ms
+static const uint8_t REFRESH_DELAY_LOOPS         = 20;    // ~320ms
+static const uint8_t CLEAR_FAULTS_DELAY_LOOPS    = 30;    // ~480ms
 
 // initial ms delay before starting fault updates
-static const uint16_t INITIAL_UPDATE_DELAY = 4000;
+static const uint16_t INITIAL_UPDATE_DELAY       = 4000;  // must be > REFRESH_DELAY_LOOPS so refresh is completed before update starts
 
 void Tas5805mComponent::setup() {
   ESP_LOGCONFIG(TAG, "Running setup");
@@ -96,6 +97,18 @@ bool Tas5805mComponent::configure_registers_() {
 }
 
 void Tas5805mComponent::loop() {
+  if (this->clear_faults_triggered_ && this->refresh_settings_complete_) {
+    if (this->loop_counter_ < CLEAR_FAULTS_DELAY_LOOPS) {
+      this->loop_counter_++;
+      return;
+    }
+    if (!this->clear_fault_registers_()) {
+       ESP_LOGW(TAG, "%sclearing faults", ERROR);
+    }
+    this->clear_faults_triggered_ = false;
+    this->loop_counter_ = 0;
+    return;
+  }
   // 'play_file' is initiated by YAML on_boot with priority 220.0f
   // 'refresh_settings' is set by 'eq_gainband16000hz' or 'enable_eq_switch' (defined by YAML)
   // both have setup priority AFTER_CONNECTION = 100.0f
@@ -105,7 +118,7 @@ void Tas5805mComponent::loop() {
   // settings are only refreshed once
   // disable 'loop' once all eq gains have been written
   if (this->refresh_settings_complete_) {
-    this->disable_loop(); // requires Esphome 2025.7.0
+    //this->disable_loop(); // requires Esphome 2025.7.0
     return;
   }
 
@@ -114,7 +127,7 @@ void Tas5805mComponent::loop() {
 
   // once refresh settings is triggered then wait 'DELAY_LOOPS' before proceeding
   // to ensure on boot sound has played and tas5805m has detected i2s clock
-  if (this->loop_counter_ < DELAY_LOOPS) {
+  if (this->loop_counter_ < REFRESH_DELAY_LOOPS) {
     this->loop_counter_++;
     return;
   }
@@ -131,6 +144,7 @@ void Tas5805mComponent::loop() {
     // then once mixer mode is set, the refresh of settings is complete
     if (!this->using_eq_gains_) {
       this->refresh_settings_complete_ =  true;
+      this->loop_counter_ = 0;
       return;
     }
 
@@ -177,14 +191,6 @@ void Tas5805mComponent::update() {
     return;
   }
 
-  // if there was a fault last update then clear any faults
-  if (this->have_fault_) {
-    this->had_fault_last_update_ = true;
-     if (!this->clear_fault_registers_()) {
-       ESP_LOGW(TAG, "%sclearing faults", ERROR);
-     }
-  }
-
   if (!this->read_fault_registers_()) {
     ESP_LOGW(TAG, "%sreading faults", ERROR);
     return;
@@ -199,8 +205,6 @@ void Tas5805mComponent::update() {
 
   // skip sensor update and clear faults if there is no possibility of state change in any faults
   if ((!this->had_fault_last_update_) && (!this->have_fault_)) return;
-
-  this->had_fault_last_update_ = false;
 
   #ifdef USE_BINARY_SENSOR
   if (this->have_fault_binary_sensor_ != nullptr) {
@@ -260,15 +264,13 @@ void Tas5805mComponent::update() {
   #endif
 
   // if there is a fault then clear any faults
-  // if (this->have_fault_) {
-  //   this->had_fault_last_update_ = true;
-  //    if (!this->clear_fault_registers_()) {
-  //      ESP_LOGW(TAG, "%sclearing faults", ERROR);
-  //    }
-  // }
-  // else {
-  //   this->had_fault_last_update_ = false;
-  // }
+  if (this->have_fault_) {
+    this->had_fault_last_update_ = true;
+    this->clear_faults_triggered_ = true;
+  }
+  else {
+    this->had_fault_last_update_ = false;
+  }
 }
 
 void Tas5805mComponent::dump_config() {
