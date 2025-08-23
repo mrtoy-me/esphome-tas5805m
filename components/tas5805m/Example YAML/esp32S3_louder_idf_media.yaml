@@ -116,7 +116,7 @@ media_player:
     name: Mediaplayer
     id: louder_mediaplayer
     #task_stack_in_psram: true
-    volume_increment: 0.1%
+    volume_increment: 10%
     volume_initial: 10%
     media_pipeline:
       speaker: media_spk_resampling_input
