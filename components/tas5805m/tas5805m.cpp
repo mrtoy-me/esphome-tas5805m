@@ -173,6 +173,8 @@ void Tas5805mComponent::update() {
     if (!tas5805m_write_byte_(TAS5805M_FAULT_CLEAR, TAS5805M_ANALOG_FAULT_CLEAR)) {
       ESP_LOGW(TAG, "%sinitialising faults", ERROR);
     }
+
+    return;
   }
 
   if (!this->read_fault_registers_()) {
