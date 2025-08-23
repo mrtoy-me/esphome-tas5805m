@@ -258,17 +258,6 @@ void Tas5805mComponent::update() {
     this->over_temperature_warning_binary_sensor_->publish_state(this->tas5805m_state_.faults.temperature_warning);
   }
   #endif
-
-  // if there is a fault then clear any faults
-  // if (this->have_fault_) {
-  //   this->had_fault_last_update_ = true;
-  //    if (!this->clear_fault_registers_()) {
-  //      ESP_LOGW(TAG, "%sclearing faults", ERROR);
-  //    }
-  // }
-  // else {
-  //   this->had_fault_last_update_ = false;
-  // }
 }
 
 void Tas5805mComponent::dump_config() {
@@ -707,7 +696,7 @@ bool Tas5805mComponent::set_state_(ControlState state) {
 bool Tas5805mComponent::clear_fault_registers_() {
   if (!tas5805m_write_byte_(TAS5805M_FAULT_CLEAR, TAS5805M_ANALOG_FAULT_CLEAR)) return false;
   this->tas5805m_state_.times_faults_cleared++;
-  ESP_LOGD(TAG, "Fault registers cleared");
+  ESP_LOGD(TAG, "Faults cleared");
   return true;
 }
 
