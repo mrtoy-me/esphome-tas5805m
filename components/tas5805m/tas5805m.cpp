@@ -109,6 +109,7 @@ void Tas5805mComponent::loop() {
       this->loop_counter_ = 0;
       return;
     }
+    ESP_LOGW(TAG, "mode= 0x%2X", state);
     if (state == CTRL_HI_Z) {
       ESP_LOGW(TAG, "Waiting for Play mode");
       this->loop_counter_ = 0;
