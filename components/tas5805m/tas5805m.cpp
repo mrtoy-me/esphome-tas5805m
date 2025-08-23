@@ -23,7 +23,7 @@ static const uint8_t ESPHOME_MAXIMUM_DELAY = 5;     // milliseconds
 static const uint8_t DELAY_LOOPS           = 20;    // 20 loop iterations = ~320ms
 
 // initial ms delay before starting fault updates
-static const uint16_t INITIAL_UPDATE_DELAY = 4000;
+static const uint16_t INITIAL_UPDATE_DELAY = 2000;
 
 void Tas5805mComponent::setup() {
   ESP_LOGCONFIG(TAG, "Running setup");
@@ -173,6 +173,9 @@ void Tas5805mComponent::update() {
     if (!tas5805m_write_byte_(TAS5805M_FAULT_CLEAR, TAS5805M_ANALOG_FAULT_CLEAR)) {
       ESP_LOGW(TAG, "%sinitialising faults", ERROR);
     }
+
+    // start reading faults from next update
+    return;
   }
 
   if (!this->read_fault_registers_()) {
@@ -247,7 +250,7 @@ void Tas5805mComponent::update() {
   }
   #endif
 
-  // if there is a fault then clear any faults
+  // clear fault registers if there are any faults
   if (this->have_fault_) {
     this->had_fault_last_update_ = true;
     if (!this->clear_fault_registers_()) {
@@ -594,7 +597,7 @@ bool Tas5805mComponent::get_mixer_mode_(MixerMode *mode) {
 }
 
 // only runs once from 'loop'
-// 'mixer_mode_configured_' used by 'loop' ensures it only runs once
+// 'mixer_mode_configured_' used by 'loop' to ensure only runs once
 bool Tas5805mComponent::set_mixer_mode_(MixerMode mode) {
   uint32_t mixer_l_to_l, mixer_r_to_r, mixer_l_to_r, mixer_r_to_l;
 
@@ -670,7 +673,7 @@ bool Tas5805mComponent::set_mixer_mode_(MixerMode mode) {
   }
 
   // 'tas5805m_state_' global already has mixer mode from YAML config
-  // save anyway so 'set_mixer_mode' could be used more generally
+  // save anyway so 'set_mixer_mode' could be used more generally in future
   this->tas5805m_state_.mixer_mode = mode;
   ESP_LOGD(TAG, "%s: %s", MIXER_MODE, MIXER_MODE_TEXT[this->tas5805m_state_.mixer_mode]);
   return true;
@@ -691,7 +694,7 @@ bool Tas5805mComponent::set_state_(ControlState state) {
 bool Tas5805mComponent::clear_fault_registers_() {
   if (!tas5805m_write_byte_(TAS5805M_FAULT_CLEAR, TAS5805M_ANALOG_FAULT_CLEAR)) return false;
   this->tas5805m_state_.times_faults_cleared++;
-  ESP_LOGD(TAG, "Fault registers cleared");
+  ESP_LOGD(TAG, "Faults cleared");
   return true;
 }
 
@@ -767,13 +770,14 @@ bool Tas5805mComponent::tas5805m_read_bytes_(uint8_t a_register, uint8_t* data, 
 }
 
 bool Tas5805mComponent::tas5805m_write_byte_(uint8_t a_register, uint8_t data) {
-  i2c::ErrorCode error_code = this->write_register(a_register, &data, 1, true);
-  if (error_code != i2c::ERROR_OK) {
-    ESP_LOGE(TAG, "Write error: %i", error_code);
-    this->i2c_error_ = (uint8_t)error_code;
-    return false;
-  }
-  return true;
+  return this->tas5805m_write_bytes_(a_register, &data, 1);
+  // i2c::ErrorCode error_code = this->write_register(a_register, &data, 1, true);
+  // if (error_code != i2c::ERROR_OK) {
+  //   ESP_LOGE(TAG, "Write error: %i", error_code);
+  //   this->i2c_error_ = (uint8_t)error_code;
+  //   return false;
+  // }
+  // return true;
 }
 
 bool Tas5805mComponent::tas5805m_write_bytes_(uint8_t a_register, uint8_t* data, uint8_t len) {
