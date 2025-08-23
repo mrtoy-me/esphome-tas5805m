@@ -21,7 +21,7 @@ static const uint8_t ESPHOME_MAXIMUM_DELAY = 5;     // milliseconds
 // initial delay in 'loop' before writing eq gains to ensure on boot sound has
 // played and tas5805m has detected i2s clock
 static const uint8_t REFRESH_DELAY_LOOPS         = 20;    // ~320ms
-static const uint8_t CLEAR_FAULTS_DELAY_LOOPS    = 10;    // ~600ms
+static const uint8_t CLEAR_FAULTS_DELAY_LOOPS    = 38;    // ~600ms
 
 // initial ms delay before starting fault updates
 static const uint16_t INITIAL_UPDATE_DELAY       = 4000;  // must be > REFRESH_DELAY_LOOPS so refresh is completed before update starts
@@ -100,18 +100,6 @@ void Tas5805mComponent::loop() {
   if (this->clear_faults_triggered_ && this->refresh_settings_complete_) {
     if (this->loop_counter_ < CLEAR_FAULTS_DELAY_LOOPS) {
       this->loop_counter_++;
-      return;
-    }
-
-    ControlState state;
-    if (!read_state_(&state)) {
-      ESP_LOGW(TAG, "%sreading state", ERROR);
-      this->loop_counter_ = 0;
-      return;
-    }
-    if (state == CTRL_HI_Z) {
-      ESP_LOGW(TAG, "Waiting for Play mode");
-      this->loop_counter_ = 0;
       return;
     }
     if (!this->clear_fault_registers_()) {
@@ -708,11 +696,6 @@ bool Tas5805mComponent::set_mixer_mode_(MixerMode mode) {
 
 bool Tas5805mComponent::get_state_(ControlState* state) {
   *state = this->tas5805m_state_.control_state;
-  return true;
-}
-
-bool Tas5805mComponent::read_state_(ControlState* state) {
-  if (!this->tas5805m_read_byte_(TAS5805M_DEVICE_CTRL_2, state)) return false;
   return true;
 }
 

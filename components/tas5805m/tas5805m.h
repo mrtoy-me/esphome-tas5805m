@@ -124,7 +124,6 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
    bool set_mixer_mode_(MixerMode mode);
 
    bool get_state_(ControlState* state);
-   bool read_state_(ControlState* state);
    bool set_state_(ControlState state);
 
    // manage faults
