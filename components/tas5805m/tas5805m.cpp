@@ -173,6 +173,17 @@ void Tas5805mComponent::update() {
     if (!tas5805m_write_byte_(TAS5805M_FAULT_CLEAR, TAS5805M_ANALOG_FAULT_CLEAR)) {
       ESP_LOGW(TAG, "%sinitialising faults", ERROR);
     }
+
+    // read and process faults from next update
+    return;
+  }
+
+  // if there was a fault last update then clear any faults
+  if (this->have_fault_) {
+    this->had_fault_last_update_ = true;
+    if (!this->clear_fault_registers_()) {
+      ESP_LOGW(TAG, "%sclearing faults", ERROR);
+    }
   }
 
   if (!this->read_fault_registers_()) {
@@ -187,8 +198,10 @@ void Tas5805mComponent::update() {
 
   this->have_fault_ = (this->tas5805m_state_.faults.clock_fault || faults_excluding_clock_fault);
 
-  // skip sensor update and clear faults if there is no possibility of state change in any faults
+  // skip sensor update if there is no possibility of state change in any faults
   if ((!this->had_fault_last_update_) && (!this->have_fault_)) return;
+
+  this->had_fault_last_update_ = false;
 
   #ifdef USE_BINARY_SENSOR
   if (this->have_fault_binary_sensor_ != nullptr) {
@@ -246,17 +259,6 @@ void Tas5805mComponent::update() {
     this->over_temperature_warning_binary_sensor_->publish_state(this->tas5805m_state_.faults.temperature_warning);
   }
   #endif
-
-  // clear fault registers if there are any faults
-  if (this->have_fault_) {
-    this->had_fault_last_update_ = true;
-    if (!this->clear_fault_registers_()) {
-      ESP_LOGW(TAG, "%sclearing faults", ERROR);
-    }
-  }
-  else {
-    this->had_fault_last_update_ = false;
-  }
 }
 
 void Tas5805mComponent::dump_config() {
@@ -768,13 +770,6 @@ bool Tas5805mComponent::tas5805m_read_bytes_(uint8_t a_register, uint8_t* data, 
 
 bool Tas5805mComponent::tas5805m_write_byte_(uint8_t a_register, uint8_t data) {
   return this->tas5805m_write_bytes_(a_register, &data, 1);
-  // i2c::ErrorCode error_code = this->write_register(a_register, &data, 1, true);
-  // if (error_code != i2c::ERROR_OK) {
-  //   ESP_LOGE(TAG, "Write error: %i", error_code);
-  //   this->i2c_error_ = (uint8_t)error_code;
-  //   return false;
-  // }
-  // return true;
 }
 
 bool Tas5805mComponent::tas5805m_write_bytes_(uint8_t a_register, uint8_t* data, uint8_t len) {
