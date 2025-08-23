@@ -181,9 +181,9 @@ void Tas5805mComponent::update() {
   // if there was a fault last update then clear any faults
   if (this->have_fault_) {
     this->had_fault_last_update_ = true;
-     if (!this->clear_fault_registers_()) {
-       ESP_LOGW(TAG, "%sclearing faults", ERROR);
-     }
+    if (!this->clear_fault_registers_()) {
+      ESP_LOGW(TAG, "%sclearing faults", ERROR);
+    }
   }
 
   if (!this->read_fault_registers_()) {
@@ -770,13 +770,6 @@ bool Tas5805mComponent::tas5805m_read_bytes_(uint8_t a_register, uint8_t* data, 
 
 bool Tas5805mComponent::tas5805m_write_byte_(uint8_t a_register, uint8_t data) {
   return this->tas5805m_write_bytes_(a_register, &data, 1);
-  // i2c::ErrorCode error_code = this->write_register(a_register, &data, 1, true);
-  // if (error_code != i2c::ERROR_OK) {
-  //   ESP_LOGE(TAG, "Write error: %i", error_code);
-  //   this->i2c_error_ = (uint8_t)error_code;
-  //   return false;
-  // }
-  // return true;
 }
 
 bool Tas5805mComponent::tas5805m_write_bytes_(uint8_t a_register, uint8_t* data, uint8_t len) {
