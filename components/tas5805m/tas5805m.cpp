@@ -109,7 +109,7 @@ void Tas5805mComponent::loop() {
       this->loop_counter_ = 0;
       return;
     }
-    ESP_LOGW(TAG, "mode= 0x%2X", state);
+    ESP_LOGW(TAG, "mode= 0x%02X", state);
     if (state == CTRL_HI_Z) {
       ESP_LOGW(TAG, "Waiting for Play mode");
       this->loop_counter_ = 0;
@@ -713,7 +713,7 @@ bool Tas5805mComponent::get_state_(ControlState* state) {
 }
 
 bool Tas5805mComponent::read_state_(ControlState* state) {
-  if (!this->tas5805m_read_byte_(TAS5805M_DEVICE_CTRL_2, reinterpret_cast<uint8_t *>(state))) return false;
+  if (!this->tas5805m_read_byte_(TAS5805M_POWER_STATE, reinterpret_cast<uint8_t *>(state))) return false;
   return true;
 }
 
