@@ -23,7 +23,7 @@ static const uint8_t ESPHOME_MAXIMUM_DELAY = 5;     // milliseconds
 static const uint8_t DELAY_LOOPS           = 20;    // 20 loop iterations = ~320ms
 
 // initial ms delay before starting fault updates
-static const uint16_t INITIAL_UPDATE_DELAY = 2000;
+static const uint16_t INITIAL_UPDATE_DELAY = 4000;
 
 void Tas5805mComponent::setup() {
   ESP_LOGCONFIG(TAG, "Running setup");
@@ -173,9 +173,6 @@ void Tas5805mComponent::update() {
     if (!tas5805m_write_byte_(TAS5805M_FAULT_CLEAR, TAS5805M_ANALOG_FAULT_CLEAR)) {
       ESP_LOGW(TAG, "%sinitialising faults", ERROR);
     }
-
-    // start reading faults from next update
-    return;
   }
 
   if (!this->read_fault_registers_()) {
