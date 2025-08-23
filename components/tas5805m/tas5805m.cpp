@@ -174,7 +174,16 @@ void Tas5805mComponent::update() {
       ESP_LOGW(TAG, "%sinitialising faults", ERROR);
     }
 
+    // read and process faults from next update
     return;
+  }
+
+  // if there was a fault last update then clear any faults
+  if (this->have_fault_) {
+    this->had_fault_last_update_ = true;
+     if (!this->clear_fault_registers_()) {
+       ESP_LOGW(TAG, "%sclearing faults", ERROR);
+     }
   }
 
   if (!this->read_fault_registers_()) {
@@ -189,8 +198,10 @@ void Tas5805mComponent::update() {
 
   this->have_fault_ = (this->tas5805m_state_.faults.clock_fault || faults_excluding_clock_fault);
 
-  // skip sensor update and clear faults if there is no possibility of state change in any faults
+  // skip sensor update if there is no possibility of state change in any faults
   if ((!this->had_fault_last_update_) && (!this->have_fault_)) return;
+
+  this->had_fault_last_update_ = false;
 
   #ifdef USE_BINARY_SENSOR
   if (this->have_fault_binary_sensor_ != nullptr) {
@@ -248,17 +259,6 @@ void Tas5805mComponent::update() {
     this->over_temperature_warning_binary_sensor_->publish_state(this->tas5805m_state_.faults.temperature_warning);
   }
   #endif
-
-  // clear fault registers if there are any faults
-  if (this->have_fault_) {
-    this->had_fault_last_update_ = true;
-    if (!this->clear_fault_registers_()) {
-      ESP_LOGW(TAG, "%sclearing faults", ERROR);
-    }
-  }
-  else {
-    this->had_fault_last_update_ = false;
-  }
 }
 
 void Tas5805mComponent::dump_config() {
