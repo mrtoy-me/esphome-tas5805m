@@ -251,9 +251,7 @@ binary_sensor:
       name: Over Temperature Shutdown Fault
     over_temp_warning:
       name: Over Temperature Warning
-      on_press:
-        - media_player.volume_down
-
+      id: over_temperature_warning
 
 interval:
   - interval: 60s
@@ -269,3 +267,12 @@ interval:
                     - media_player.is_paused: louder_mediaplayer
           then:
             - switch.turn_off: enable_louder
+  - interval: 2s
+    then:
+      - if:
+          condition:
+            - binary_sensor.is_on: over_temperature_warning
+            - lambda: 'return (id(louder_mediaplayer).volume != 0.0f);'
+            - lambda: 'return !(id(louder_mediaplayer).is_muted());'
+          then:
+            - media_player.volume_down
