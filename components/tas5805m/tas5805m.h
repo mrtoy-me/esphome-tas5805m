@@ -172,7 +172,6 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
    bool exclude_fault_; // configured through YAML
    #endif
 
-   bool clear_faults_triggered_{false};
    bool had_fault_last_update_{true}; // true ensure sensor are updated on first update
    bool have_fault_{false}; // false will skip clear fault registers on first update
 
