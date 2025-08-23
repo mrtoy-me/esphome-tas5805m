@@ -712,7 +712,7 @@ bool Tas5805mComponent::get_state_(ControlState* state) {
 }
 
 bool Tas5805mComponent::read_state_(ControlState* state) {
-  if (!this->tas5805m_read_byte_(TAS5805M_DEVICE_CTRL_2, state)) return false;
+  if (!this->tas5805m_read_byte_(TAS5805M_DEVICE_CTRL_2, reinterpret_cast<uint8_t *>(state))) return false;
   return true;
 }
 
