@@ -21,7 +21,7 @@ static const uint8_t ESPHOME_MAXIMUM_DELAY = 5;     // milliseconds
 // initial delay in 'loop' before writing eq gains to ensure on boot sound has
 // played and tas5805m has detected i2s clock
 static const uint8_t REFRESH_DELAY_LOOPS         = 20;    // ~320ms
-static const uint8_t CLEAR_FAULTS_DELAY_LOOPS    = 38;    // ~600ms
+static const uint8_t CLEAR_FAULTS_DELAY_LOOPS    = 30;    // ~480ms
 
 // initial ms delay before starting fault updates
 static const uint16_t INITIAL_UPDATE_DELAY       = 4000;  // must be > REFRESH_DELAY_LOOPS so refresh is completed before update starts
