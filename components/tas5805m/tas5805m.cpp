@@ -20,7 +20,7 @@ static const uint8_t ESPHOME_MAXIMUM_DELAY = 5;     // milliseconds
 
 // initial delay in 'loop' before writing eq gains to ensure on boot sound has
 // played and tas5805m has detected i2s clock
-static const uint8_t DELAY_LOOPS           = 20;    // 20 loop iterations = ~320ms
+static const uint8_t DELAY_LOOPS           = 30;    // 30 loop iterations ~ 480ms
 
 // initial ms delay before starting fault updates
 static const uint16_t INITIAL_UPDATE_DELAY = 4000;
@@ -191,60 +191,30 @@ void Tas5805mComponent::update() {
     return;
   }
 
-  bool faults_excluding_clock_fault = (this->tas5805m_state_.faults.channel_fault ||
-                                       this->tas5805m_state_.faults.global_fault ||
-                                       this->tas5805m_state_.faults.temperature_fault ||
-                                       this->tas5805m_state_.faults.temperature_warning );
+  this->faults_excluding_clock_fault_ = ( this->tas5805m_state_.faults.channel_fault ||
+                                          this->tas5805m_state_.faults.global_fault ||
+                                          this->tas5805m_state_.faults.temperature_fault ||
+                                          this->tas5805m_state_.faults.temperature_warning );
 
-  this->have_fault_ = (this->tas5805m_state_.faults.clock_fault || faults_excluding_clock_fault);
+  this->have_fault_ = (this->tas5805m_state_.faults.clock_fault || this->faults_excluding_clock_fault_);
 
   // skip sensor update if there is no possibility of state change in any faults
   if ((!this->had_fault_last_update_) && (!this->have_fault_)) return;
 
   this->had_fault_last_update_ = false;
 
-  #ifdef USE_BINARY_SENSOR
+  #ifdef USE_TAS5805M_BINARY_SENSOR
+  publish_faults_();
+  #endif
+}
+
+#ifdef USE_TAS5805M_BINARY_SENSOR
+void Tas5805mComponent::publish_faults_() {
   if (this->have_fault_binary_sensor_ != nullptr) {
     if (this->exclude_fault_ )
-      this->have_fault_binary_sensor_->publish_state(faults_excluding_clock_fault);
+      this->have_fault_binary_sensor_->publish_state(this->faults_excluding_clock_fault_);
     else
       this->have_fault_binary_sensor_->publish_state(this->have_fault_);
-  }
-
-  if (this->is_new_channel_fault_) {
-    if (this->right_channel_over_current_fault_binary_sensor_ != nullptr) {
-      this->right_channel_over_current_fault_binary_sensor_->publish_state(this->tas5805m_state_.faults.channel_fault & (1 << 0));
-    }
-
-    if (this->left_channel_over_current_fault_binary_sensor_ != nullptr) {
-      this->left_channel_over_current_fault_binary_sensor_->publish_state(this->tas5805m_state_.faults.channel_fault & (1 << 1));
-    }
-
-    if (this->right_channel_dc_fault_binary_sensor_ != nullptr) {
-      this->right_channel_dc_fault_binary_sensor_->publish_state(this->tas5805m_state_.faults.channel_fault & (1 << 2));
-    }
-
-    if (this->left_channel_dc_fault_binary_sensor_ != nullptr) {
-      this->left_channel_dc_fault_binary_sensor_->publish_state(this->tas5805m_state_.faults.channel_fault & (1 << 3));
-    }
-  }
-
-  if (this->is_new_global_fault_) {
-    if (this->pvdd_under_voltage_fault_binary_sensor_ != nullptr) {
-      this->pvdd_under_voltage_fault_binary_sensor_->publish_state(this->tas5805m_state_.faults.global_fault & (1 << 0));
-    }
-
-    if (this->pvdd_over_voltage_fault_binary_sensor_ != nullptr) {
-      this->pvdd_over_voltage_fault_binary_sensor_->publish_state(this->tas5805m_state_.faults.global_fault & (1 << 1));
-    }
-
-    if (this->bq_write_failed_fault_binary_sensor_ != nullptr) {
-      this->bq_write_failed_fault_binary_sensor_->publish_state(this->tas5805m_state_.faults.global_fault & (1 << 6));
-    }
-
-    if (this->otp_crc_check_error_binary_sensor_ != nullptr) {
-      this->otp_crc_check_error_binary_sensor_->publish_state(this->tas5805m_state_.faults.global_fault & (1 << 7));
-    }
   }
 
   if (this->clock_fault_binary_sensor_ != nullptr) {
@@ -258,8 +228,59 @@ void Tas5805mComponent::update() {
   if (this->over_temperature_warning_binary_sensor_ != nullptr) {
     this->over_temperature_warning_binary_sensor_->publish_state(this->tas5805m_state_.faults.temperature_warning);
   }
-  #endif
+
+  // publish channel and global faults in separate loop iterations to spread component time when publishing binary sensors
+  if (this->is_new_channel_fault_) {
+    this->set_timeout("", 15, [this]() { this->publish_channel_faults_(); });
+  }
+  else {
+    if (this->is_new_global_fault_) {
+      this->set_timeout("", 15, [this]() { this->publish_global_faults_(); });
+    }
+  }
 }
+
+void Tas5805mComponent::publish_channel_faults_() {
+  if (this->right_channel_over_current_fault_binary_sensor_ != nullptr) {
+    this->right_channel_over_current_fault_binary_sensor_->publish_state(this->tas5805m_state_.faults.channel_fault & (1 << 0));
+  }
+
+  if (this->left_channel_over_current_fault_binary_sensor_ != nullptr) {
+    this->left_channel_over_current_fault_binary_sensor_->publish_state(this->tas5805m_state_.faults.channel_fault & (1 << 1));
+  }
+
+  if (this->right_channel_dc_fault_binary_sensor_ != nullptr) {
+    this->right_channel_dc_fault_binary_sensor_->publish_state(this->tas5805m_state_.faults.channel_fault & (1 << 2));
+  }
+
+  if (this->left_channel_dc_fault_binary_sensor_ != nullptr) {
+    this->left_channel_dc_fault_binary_sensor_->publish_state(this->tas5805m_state_.faults.channel_fault & (1 << 3));
+  }
+
+  if (this->is_new_global_fault_) {
+      this->set_timeout("", 15, [this]() { this->publish_global_faults_(); });
+  }
+}
+
+
+void Tas5805mComponent::publish_global_faults_() {
+  if (this->pvdd_under_voltage_fault_binary_sensor_ != nullptr) {
+    this->pvdd_under_voltage_fault_binary_sensor_->publish_state(this->tas5805m_state_.faults.global_fault & (1 << 0));
+  }
+
+  if (this->pvdd_over_voltage_fault_binary_sensor_ != nullptr) {
+    this->pvdd_over_voltage_fault_binary_sensor_->publish_state(this->tas5805m_state_.faults.global_fault & (1 << 1));
+  }
+
+  if (this->bq_write_failed_fault_binary_sensor_ != nullptr) {
+    this->bq_write_failed_fault_binary_sensor_->publish_state(this->tas5805m_state_.faults.global_fault & (1 << 6));
+  }
+
+  if (this->otp_crc_check_error_binary_sensor_ != nullptr) {
+    this->otp_crc_check_error_binary_sensor_->publish_state(this->tas5805m_state_.faults.global_fault & (1 << 7));
+  }
+}
+#endif
 
 void Tas5805mComponent::dump_config() {
   ESP_LOGCONFIG(TAG, "Tas5805m Audio Dac:");
@@ -285,7 +306,7 @@ void Tas5805mComponent::dump_config() {
       break;
   }
 
-  #ifdef USE_BINARY_SENSOR
+  #ifdef USE_TAS5805M_BINARY_SENSOR
   ESP_LOGCONFIG(TAG, "Tas5805m Binary Sensors:");
   LOG_BINARY_SENSOR("  ", "Any Faults", this->have_fault_binary_sensor_);
   if (this->exclude_fault_) {

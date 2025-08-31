@@ -10,7 +10,7 @@
 #include "tas5805m_eq.h"
 #endif
 
-#ifdef USE_BINARY_SENSOR
+#ifdef USE_TAS5805M_BINARY_SENSOR
 #include "esphome/components/binary_sensor/binary_sensor.h"
 #endif
 
@@ -22,7 +22,7 @@ enum AutoRefreshMode : uint8_t {
     BY_SWITCH = 1,
 };
 
-#ifdef USE_BINARY_SENSOR
+#ifdef USE_TAS5805M_BINARY_SENSOR
 enum ExcludeFromHaveFault : uint8_t {
     NONE        = 0,
     CLOCK_FAULT = 1,
@@ -55,7 +55,7 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
   void config_volume_max(float volume_max) {this->tas5805m_state_.volume_max = (int8_t)(volume_max); }
   void config_volume_min(float volume_min) {this->tas5805m_state_.volume_min = (int8_t)(volume_min); }
 
-  #ifdef USE_BINARY_SENSOR
+  #ifdef USE_TAS5805M_BINARY_SENSOR
   SUB_BINARY_SENSOR(have_fault)
   SUB_BINARY_SENSOR(left_channel_dc_fault)
   SUB_BINARY_SENSOR(right_channel_dc_fault)
@@ -129,6 +129,11 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
    // manage faults
    bool clear_fault_registers_();
    bool read_fault_registers_();
+   #ifdef USE_TAS5805M_BINARY_SENSOR
+   void publish_faults_();
+   void publish_channel_faults_();
+   void publish_global_faults_();
+   #endif
 
    // low level functions
    bool set_book_and_page_(uint8_t book, uint8_t page);
@@ -168,12 +173,13 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
 
    AutoRefreshMode auto_refresh_; // configured by YAML with default 'BY_GAIN'
 
-   #ifdef USE_BINARY_SENSOR
+   #ifdef USE_TAS5805M_BINARY_SENSOR
    bool exclude_fault_; // configured through YAML
    #endif
 
    bool had_fault_last_update_{true}; // true ensure sensor are updated on first update
    bool have_fault_{false}; // false will skip clear fault registers on first update
+   bool faults_excluding_clock_fault_{false};
 
    bool is_new_channel_fault_{false};
    bool is_new_global_fault_{false};

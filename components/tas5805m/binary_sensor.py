@@ -89,6 +89,7 @@ CONFIG_SCHEMA = {
 }
 
 async def to_code(config):
+    cg.add_define("USE_TAS5805M_BINARY_SENSOR")
     tas5805m_component = await cg.get_variable(config[CONF_TAS5805M_ID])
 
     if has_fault_config := config.get(CONF_HAVE_FAULT):
