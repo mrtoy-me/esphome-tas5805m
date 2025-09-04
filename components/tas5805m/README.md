@@ -186,7 +186,7 @@ audio_dac:
     mixer_mode: STEREO
     volume_max: 0dB
     volume_min: -60db
-    update_interval: 4s
+    update_interval: 1s
 ```
 Configuration variables:
 - **enable_pin:** (*Required*): GPIOxx, enable pin of ESP32 Louder
@@ -205,8 +205,8 @@ Configuration variables:
 - **volume_min:** (*Optional*): whole dB values from -103dB to 24dB. Defaults to -103dB
 
 - **update_interval:** (*Optional*): defines the interval (seconds) at which faults will be
-  checked and then if detected will be cleared at next interval. Defaults to 4s.
-  For ESP32-S3 Louder, update interval can be reduced as low as 1s.
+  checked and then if detected will be cleared at next interval. Defaults to 1s.
+  **Note:** update interval cannot be reduced below 1s.
 
 - **refresh_eq:** (*Optional*): valid values BY_GAIN or BY_SWITCH. Defaults to BY_GAIN
   This setting can normally be ignored and omitted if you are using Speaker
@@ -323,14 +323,11 @@ activates if any the TAS5805M faults conditions activate.
   - **exclude:** (optional): **CLOCK_FAULT** allows clock faults to be excluded from have_fault binary sensor.
     Default is not to exclude clock faults from the have_fault binary sensor.
 
-**over_temp_warning:** Example Yaml configuration to reduce volume on over temperature warning:
-  - To attempt to mitigate an over temperature warning, the volume can be decreased using the following YAML.
-    For this YAML to take effect, the **mediaplayer:** configuration must include configuration
-    of the **volume_increment:**. Typically 10% should be suitable but depends on the dB range defined
-    by the **volume_max:** and **volume_min:** under **audio_dac:**. The % equivalent to around 6dB decrease
+**over_temp_warning:** 
+  - To attempt to mitigate an over temperature upon receiving a over temperature, the volume can be decreased using **interval:**
+    The "..._louder_idf_media.yaml" examples provide example configuration. For this YAML to take effect, the **mediaplayer:**  configuration must include configuration of the **volume_increment:**. Typically 5-10% should be suitable but depends on the dB range defined by the **volume_max:** and **volume_min:** under **audio_dac:**. The % equivalent to around 6dB decrease
     should have a benficial effect, but also depends on the update interval for checking faults.
-  **Note:** all binary sensors are updated at the **update interval:** defined under **audio_dac:** or
-  if not defined defaults to 4s. For ESP32-S3 Louder, update interval can be reduced as low as 1s.
+    **Note:** all binary sensors are updated at the **update interval:** defined under **audio_dac:**
 
 Example configuration of Tas5805m Binary Sensors:
 ```
@@ -361,8 +358,7 @@ binary_sensor:
       name: Over Temperature Shutdown Fault
     over_temp_warning:
       name: Over Temperature Warning
-      on_press:
-        - media_player.volume_down
+      id: over_temperature_warning
 ```
 
 ## Sensor
