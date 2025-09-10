@@ -20,7 +20,7 @@ static const uint8_t ESPHOME_MAXIMUM_DELAY = 5;     // milliseconds
 
 // initial delay in 'loop' before writing eq gains to ensure on boot sound has
 // played and tas5805m has detected i2s clock
-static const uint8_t DELAY_LOOPS           = 30;    // 30 loop iterations ~ 480ms
+static const uint8_t DELAY_LOOPS           = 20;    // 20 loop iterations ~ 320ms
 
 // initial ms delay before starting fault updates
 static const uint16_t INITIAL_UPDATE_DELAY = 4000;
