@@ -780,7 +780,7 @@ bool Tas5805mComponent::tas5805m_read_bytes_(uint8_t a_register, uint8_t* data, 
     this->i2c_error_ = (uint8_t)error_code;
     return false;
   }
-  error_code = this->read_register(a_register, data, number_bytes, true);
+  error_code = this->read_register(a_register, data, number_bytes);
   if (error_code != i2c::ERROR_OK) {
     ESP_LOGE(TAG, "Read error: %i", error_code);
     this->i2c_error_ = (uint8_t)error_code;
@@ -794,7 +794,7 @@ bool Tas5805mComponent::tas5805m_write_byte_(uint8_t a_register, uint8_t data) {
 }
 
 bool Tas5805mComponent::tas5805m_write_bytes_(uint8_t a_register, uint8_t* data, uint8_t len) {
-  i2c::ErrorCode error_code = this->write_register(a_register, data, len, true);
+  i2c::ErrorCode error_code = this->write_register(a_register, data, len);
   if (error_code != i2c::ERROR_OK) {
     ESP_LOGE(TAG, "Write error: %i", error_code);
     this->i2c_error_ = (uint8_t)error_code;
