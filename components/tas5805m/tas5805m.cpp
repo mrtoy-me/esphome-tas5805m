@@ -204,7 +204,7 @@ void Tas5805mComponent::update() {
   this->had_fault_last_update_ = false;
 
   #ifdef USE_TAS5805M_BINARY_SENSOR
-  publish_faults_();
+  this->publish_faults_();
   #endif
 }
 
