@@ -11,6 +11,7 @@ esphome:
 
 esp32:
   board: mhetesp32minikit
+  variant: esp32
   flash_size: 8MB
   cpu_frequency: 240MHz
   framework:
@@ -26,6 +27,8 @@ esp32:
 # Enable logging
 logger:
   level: DEBUG
+  logs:
+    number: INFO
 
 # Enable Home Assistant API
 api:
@@ -67,7 +70,7 @@ audio_dac:
     mixer_mode: STEREO
     volume_max: 0dB
     volume_min: -60db
-    update_interval: 10s
+    update_interval: 1s
 
 i2s_audio:
   i2s_lrclk_pin: GPIO25
@@ -216,6 +219,7 @@ binary_sensor:
   - platform: tas5805m
     have_fault:
       name: Any Faults
+      exclude: CLOCK_FAULT
     left_channel_dc_fault:
       name: Left Channel DC Fault
     right_channel_dc_fault:
@@ -238,6 +242,7 @@ binary_sensor:
       name: Over Temperature Shutdown Fault
     over_temp_warning:
       name: Over Temperature Warning
+      id: over_temperature_warning
 
 interval:
   - interval: 60s
@@ -253,3 +258,12 @@ interval:
                     - media_player.is_paused: louder_mediaplayer
           then:
             - switch.turn_off: enable_louder
+  - interval: 2s
+    then:
+      - if:
+          condition:
+            - binary_sensor.is_on: over_temperature_warning
+            - lambda: 'return (id(louder_mediaplayer).volume != 0.0f);'
+            - lambda: 'return !(id(louder_mediaplayer).is_muted());'
+          then:
+            - media_player.volume_down

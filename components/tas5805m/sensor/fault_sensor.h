@@ -19,7 +19,7 @@ class FaultSensor : public PollingComponent, public Parented<Tas5805mComponent> 
   sensor::Sensor* times_faults_cleared_sensor_{nullptr};
 
   // initialise as large number so first value of first update interval is saved
-  uint32_t last_faults_cleared_{1000}; // large number so first value of first update interval is saved
+  uint32_t last_faults_cleared_{100000};
 };
 
 }  // namespace tas5805m

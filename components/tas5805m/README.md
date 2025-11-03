@@ -186,7 +186,7 @@ audio_dac:
     mixer_mode: STEREO
     volume_max: 0dB
     volume_min: -60db
-    update_interval: 4s
+    update_interval: 1s
 ```
 Configuration variables:
 - **enable_pin:** (*Required*): GPIOxx, enable pin of ESP32 Louder
@@ -205,8 +205,8 @@ Configuration variables:
 - **volume_min:** (*Optional*): whole dB values from -103dB to 24dB. Defaults to -103dB
 
 - **update_interval:** (*Optional*): defines the interval (seconds) at which faults will be
-  checked and then if detected will be cleared. Defaults to 4s. For ESP32-S3 Louder, update 
-  interval can be reduced as low as 1s.
+  checked and then if detected will be cleared at next interval. Defaults to 1s.
+  **Note:** update interval cannot be reduced below 1s.
 
 - **refresh_eq:** (*Optional*): valid values BY_GAIN or BY_SWITCH. Defaults to BY_GAIN
   This setting can normally be ignored and omitted if you are using Speaker
@@ -231,7 +231,7 @@ for the defined time and when music player activity is detected (by mediaplayer)
 the Enable Louder Switch is triggered On. The example interval configuration also
 requires configuration of **mediaplayer:** which is also shown in the YAML examples.
 
-Configuration of tas5805m switches in typical use case:
+Configuration of Tas5805m Switches in typical use case:
 
 ```switch:
   - platform: tas5805m
@@ -267,6 +267,7 @@ all 15 EQ Gain Band headings to be configured. For TAS5805M EQ Band Gains to
 configure correctly requires some addition YAML configuration, refer to the
 "Activation of Mixer mode and EQ Gains" section above and provided YAML examples.
 
+Example configuration of Tas5805m Band Gain Numbers:
 ```
 number:
   - platform: tas5805m
@@ -317,14 +318,24 @@ as shown below with an example name configured.
 All 12 binary sensors can be optionally defined but it is recommended that at minimum,
 one binary sensor **have_fault:** is configured. The **have_fault:** binary sensor
 activates if any the TAS5805M faults conditions activate.
-Note: binary sensors are updated at the **update interval:** defined under **audio_dac:** or
-if not defined default to 30s.
 
+**have_fault:** Configuration variable:
+  - **exclude:** (optional): **CLOCK_FAULT** allows clock faults to be excluded from have_fault binary sensor.
+    Default is not to exclude clock faults from the have_fault binary sensor.
+
+**over_temp_warning:** 
+  - To attempt to mitigate an over temperature upon receiving a over temperature, the volume can be decreased using **interval:**
+    The "..._louder_idf_media.yaml" examples provide example configuration. For this YAML to take effect, the **mediaplayer:**  configuration must include configuration of the **volume_increment:**. Typically 5-10% should be suitable but depends on the dB range defined by the **volume_max:** and **volume_min:** under **audio_dac:**. The % equivalent to around 6dB decrease
+    should have a benficial effect, but also depends on the update interval for checking faults.
+    **Note:** all binary sensors are updated at the **update interval:** defined under **audio_dac:**
+
+Example configuration of Tas5805m Binary Sensors:
 ```
 binary_sensor:
   - platform: tas5805m
     have_fault:
       name: Any Faults
+      exclude: CLOCK_FAULT
     left_channel_dc_fault:
       name: Left Channel DC Fault
     right_channel_dc_fault:
@@ -347,6 +358,7 @@ binary_sensor:
       name: Over Temperature Shutdown Fault
     over_temp_warning:
       name: Over Temperature Warning
+      id: over_temperature_warning
 ```
 
 ## Sensor

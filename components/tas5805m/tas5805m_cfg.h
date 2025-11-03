@@ -28,13 +28,14 @@ namespace tas5805m {
   struct Tas5805mConfiguration {
     uint8_t offset;
     uint8_t value;
-  };
+  }__attribute__((packed));
 
   struct Tas5805mFault {
-    uint8_t err0;
-    uint8_t err1;
-    uint8_t err2;
-    uint8_t ot_warn;
+    uint8_t channel_fault;
+    uint8_t global_fault;
+    bool clock_fault;
+    bool temperature_fault;
+    bool temperature_warning;
   };
 
 // Startup sequence codes

@@ -20,7 +20,7 @@ void EqGainBand16000hz::setup() {
 }
 
 void EqGainBand16000hz::dump_config() {
-  ESP_LOGCONFIG(TAG, "Tas5805m EQ Gain 16000Hz Band: '%s'", this->get_name().c_str());
+  ESP_LOGCONFIG(TAG, "  16000Hz Band '%s'", this->get_name().c_str());
 }
 
 void EqGainBand16000hz::control(float value) {

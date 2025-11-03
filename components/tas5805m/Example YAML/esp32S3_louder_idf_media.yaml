@@ -75,7 +75,7 @@ audio_dac:
     analog_gain: -15.5db
     volume_max: -5dB
     volume_min: -60db
-    update_interval: 10s
+    update_interval: 1s
 
 i2s_audio:
   i2s_lrclk_pin: GPIO15
@@ -228,6 +228,7 @@ binary_sensor:
   - platform: tas5805m
     have_fault:
       name: Any Faults
+      exclude: CLOCK_FAULT
     left_channel_dc_fault:
       name: Left Channel DC Fault
     right_channel_dc_fault:
@@ -250,6 +251,7 @@ binary_sensor:
       name: Over Temperature Shutdown Fault
     over_temp_warning:
       name: Over Temperature Warning
+      id: over_temperature_warning
 
 interval:
   - interval: 60s
@@ -265,3 +267,12 @@ interval:
                     - media_player.is_paused: louder_mediaplayer
           then:
             - switch.turn_off: enable_louder
+  - interval: 2s
+    then:
+      - if:
+          condition:
+            - binary_sensor.is_on: over_temperature_warning
+            - lambda: 'return (id(louder_mediaplayer).volume != 0.0f);'
+            - lambda: 'return !(id(louder_mediaplayer).is_muted());'
+          then:
+            - media_player.volume_down

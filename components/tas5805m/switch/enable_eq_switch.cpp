@@ -1,5 +1,5 @@
-#include "esphome/core/log.h"
 #include "enable_eq_switch.h"
+#include "esphome/core/log.h"
 
 namespace esphome {
 namespace tas5805m {
@@ -8,10 +8,7 @@ static const char *const TAG = "tas5805m.switch";
 
 void EnableEqSwitch::setup() {
   optional<bool> initial_state = this->get_initial_state_with_restore_mode();
-
   bool setup_state = initial_state.has_value() ? initial_state.value() : false;
-
-  ESP_LOGD(TAG, "Enable EQ setup state: %s", ONOFF(setup_state));
   this->write_state(setup_state);
 
   // this allows a workaround to refresh eq gains where a sound is not played
@@ -27,19 +24,20 @@ void EnableEqSwitch::setup() {
 }
 
 void EnableEqSwitch::dump_config() {
-  LOG_SWITCH("", "Tas5805m Enable EQ Control switch:", this);
+  ESP_LOGCONFIG(TAG, "Tas5805m Switch:");
+  LOG_SWITCH("  ", "Enable EQ", this);
 }
 
 void EnableEqSwitch::write_state(bool state) {
   this->publish_state(state);
-  this->parent_->set_eq(state);
+  this->parent_->enable_eq(state);
 
   // normal condition
   if (!this->trigger_refresh_settings_) return;
 
   // when 'trigger_refresh_settings_' is set true by 'setup'
   // then effectively 'refresh_settings' triggers on first transition from Off to On
-  // if 'refresh_settings' has already been called by YAML
+  // if 'refresh_settings' has already been called,
   // it does not matter as'parent_->refresh_settings()'  will only run once
   if (state) {
     ESP_LOGD(TAG, "Triggering refresh settings");
