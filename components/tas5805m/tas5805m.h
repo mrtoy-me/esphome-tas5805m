@@ -22,17 +22,10 @@ enum AutoRefreshMode : uint8_t {
     BY_SWITCH = 1,
 };
 
-enum IgnoreFaultsMode : uint8_t {
-    NONE   = 0,
-    CLOCK_FAULT = 1,
-};
-
-#ifdef USE_TAS5805M_BINARY_SENSOR
-enum ExcludeFromHaveFault : uint8_t {
+enum ExcludeIgnoreModes : uint8_t {
     NONE        = 0,
     CLOCK_FAULT = 1,
 };
-#endif
 
 class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, public i2c::I2CDevice {
  public:
@@ -53,8 +46,8 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
 
   void config_dac_mode(DacMode dac_mode) {this->tas5805m_dac_mode_ = dac_mode; }
 
-  void config_ignore_faults_mode(IgnoreFaultsMode ignore_faults_mode) {
-    this->consider_clock_faults_when_clearing_faults_ = !(ignore_faults_mode == IgnoreFaultsMode::CLOCK_FAULT);
+  void config_ignore_faults_mode(ExcludeIgnoreModes ignore_faults_mode) {
+    this->consider_clock_faults_when_clearing_faults_ = !(ignore_faults_mode == ExcludeIgnoreModes::CLOCK_FAULT);
   }
 
   void config_mixer_mode(MixerMode mixer_mode) {this->tas5805m_mixer_mode_ = mixer_mode; }
@@ -80,8 +73,8 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
   SUB_BINARY_SENSOR(over_temperature_shutdown_fault)
   SUB_BINARY_SENSOR(over_temperature_warning)
 
-  void config_exclude_fault(ExcludeFromHaveFault exclude_fault) { 
-    this->exclude_clock_fault_from_have_faults_ = (exclude_fault == ExcludeFromHaveFault::CLOCK_FAULT); 
+  void config_exclude_fault(ExcludeIgnoreModes exclude_fault) { 
+    this->exclude_clock_fault_from_have_faults_ = (exclude_fault == ExcludeIgnoreModes::CLOCK_FAULT); 
   }
   #endif
 

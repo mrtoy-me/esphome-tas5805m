@@ -294,9 +294,12 @@ void Tas5805mComponent::dump_config() {
               "  Analog Gain: %3.1fdB\n"
               "  Maximum Volume: %idB\n"
               "  Minimum Volume: %idB\n",
+              "  Trigger Clearing of Faults: %s\n",
               this->number_registers_configured_, this->tas5805m_dac_mode_ ? "PBTL" : "BTL",
               MIXER_MODE_TEXT[this->tas5805m_mixer_mode_], this->tas5805m_analog_gain_,
-              this->tas5805m_volume_max_, this->tas5805m_volume_min_);
+              this->tas5805m_volume_max_, this->tas5805m_volume_min_,
+              this->consider_clock_faults_when_clearing_faults_ ? "ANY FAULT" : "IGNORE CLOCK FAULTS");
+    
       LOG_UPDATE_INTERVAL(this);
       break;
   }
@@ -757,8 +760,8 @@ bool Tas5805mComponent::read_fault_registers_() {
     new_fault_state = (this->tas5805m_faults_.have_fault_except_clock_fault || this->tas5805m_faults_.clock_fault);
   }
   
-  this->is_new_common_fault_ = this->is_new_common_fault_ || (new_fault_state != this->tas5805_faults_.have_fault_);
-  this->tas5805_faults_.have_fault_ = new_fault_state;
+  this->is_new_common_fault_ = this->is_new_common_fault_ || (new_fault_state != this->tas5805m_faults_.have_fault);
+  this->tas5805m_faults_.have_fault = new_fault_state;
 
   return true;
 }
