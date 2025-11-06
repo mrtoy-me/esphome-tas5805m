@@ -718,6 +718,8 @@ bool Tas5805mComponent::read_fault_registers_() {
 
   // read all faults registers
   if (!this->tas5805m_read_bytes_(TAS5805M_CHAN_FAULT, current_faults, 4)) return false;
+  
+  // note: new state is saved regardless as it is not worth conditionally saving state based on whether state has changed 
 
   // check if any change CHAN_FAULT register as it contains 4 fault conditions(binary sensors)
   this->is_new_channel_fault_ = (current_faults[0] != this->tas5805m_faults_.channel_fault);
@@ -739,6 +741,7 @@ bool Tas5805mComponent::read_fault_registers_() {
 
   bool new_fault_state; // reuse for temporary storage of new fault state
   
+  // extract clock faults
   new_fault_state = (current_faults[1] & (1 << 2));
   this->is_new_common_fault_ = (new_fault_state != this->tas5805m_faults_.clock_fault);
   this->tas5805m_faults_.clock_fault = new_fault_state;
@@ -746,7 +749,8 @@ bool Tas5805mComponent::read_fault_registers_() {
   this->tas5805m_faults_.have_fault_except_clock_fault = 
     ( this->tas5805m_faults_.channel_fault || this->tas5805m_faults_.global_fault ||
       this->tas5805m_faults_.temperature_fault || this->tas5805m_faults_.temperature_warning );
-
+  
+  // assign have_fault binary sensor
   if (this->exclude_clock_fault_from_have_faults_ ) {
     new_fault_state = this->tas5805m_faults_.have_fault_except_clock_fault;
   } else {
