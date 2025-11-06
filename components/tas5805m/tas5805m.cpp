@@ -20,7 +20,7 @@ static const uint8_t ESPHOME_MAXIMUM_DELAY = 5;     // milliseconds
 
 // initial delay in 'loop' before writing eq gains to ensure on boot sound has
 // played and tas5805m has detected i2s clock
-static const uint8_t DELAY_LOOPS           = 30;    // 30 loop iterations ~ 480ms
+static const uint8_t DELAY_LOOPS           = 20;    // 20 loop iterations ~ 320ms
 
 // initial ms delay before starting fault updates
 static const uint16_t INITIAL_UPDATE_DELAY = 4000;
@@ -204,7 +204,7 @@ void Tas5805mComponent::update() {
   this->had_fault_last_update_ = false;
 
   #ifdef USE_TAS5805M_BINARY_SENSOR
-  publish_faults_();
+  this->publish_faults_();
   #endif
 }
 
@@ -229,7 +229,7 @@ void Tas5805mComponent::publish_faults_() {
     this->over_temperature_warning_binary_sensor_->publish_state(this->tas5805m_state_.faults.temperature_warning);
   }
 
-  // publish channel and global faults in separate loop interations to spread component time when publishing binary sensors
+  // publish channel and global faults in separate loop iterations to spread component time when publishing binary sensors
   if (this->is_new_channel_fault_) {
     this->set_timeout("", 15, [this]() { this->publish_channel_faults_(); });
   }
@@ -780,7 +780,7 @@ bool Tas5805mComponent::tas5805m_read_bytes_(uint8_t a_register, uint8_t* data, 
     this->i2c_error_ = (uint8_t)error_code;
     return false;
   }
-  error_code = this->read_register(a_register, data, number_bytes, true);
+  error_code = this->read_register(a_register, data, number_bytes);
   if (error_code != i2c::ERROR_OK) {
     ESP_LOGE(TAG, "Read error: %i", error_code);
     this->i2c_error_ = (uint8_t)error_code;
@@ -794,7 +794,7 @@ bool Tas5805mComponent::tas5805m_write_byte_(uint8_t a_register, uint8_t data) {
 }
 
 bool Tas5805mComponent::tas5805m_write_bytes_(uint8_t a_register, uint8_t* data, uint8_t len) {
-  i2c::ErrorCode error_code = this->write_register(a_register, data, len, true);
+  i2c::ErrorCode error_code = this->write_register(a_register, data, len);
   if (error_code != i2c::ERROR_OK) {
     ESP_LOGE(TAG, "Write error: %i", error_code);
     this->i2c_error_ = (uint8_t)error_code;
