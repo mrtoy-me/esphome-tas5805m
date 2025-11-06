@@ -31,8 +31,13 @@ namespace tas5805m {
   }__attribute__((packed));
 
   struct Tas5805mFault {
+    
     uint8_t channel_fault;
     uint8_t global_fault;
+
+    bool any_fault_except_clock_fault;
+
+    bool have_fault; // any fault but not clock faults if excluded
     bool clock_fault;
     bool temperature_fault;
     bool temperature_warning;

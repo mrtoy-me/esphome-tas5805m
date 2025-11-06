@@ -22,6 +22,11 @@ enum AutoRefreshMode : uint8_t {
     BY_SWITCH = 1,
 };
 
+enum IgnoreFaultsMode : uint8_t {
+    NONE   = 0,
+    CLOCK_FAULT = 1,
+};
+
 #ifdef USE_TAS5805M_BINARY_SENSOR
 enum ExcludeFromHaveFault : uint8_t {
     NONE        = 0,
@@ -48,6 +53,10 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
 
   void config_dac_mode(DacMode dac_mode) {this->tas5805m_state_.dac_mode = dac_mode; }
 
+  void config_ignore_faults_mode(IgnoreFaultsMode ignore_faults_mode) {
+    this->consider_clock_faults_when_clearing_faults_ = !(ignore_faults_mode == IgnoreFaultsMode::CLOCK_FAULT);
+  }
+
   void config_mixer_mode(MixerMode mixer_mode) {this->tas5805m_state_.mixer_mode = mixer_mode; }
 
   void config_refresh_eq(AutoRefreshMode auto_refresh) { this->auto_refresh_ = auto_refresh; }
@@ -71,7 +80,9 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
   SUB_BINARY_SENSOR(over_temperature_shutdown_fault)
   SUB_BINARY_SENSOR(over_temperature_warning)
 
-  void config_exclude_fault(ExcludeFromHaveFault exclude_fault) { this->exclude_fault_ = (exclude_fault == ExcludeFromHaveFault::CLOCK_FAULT); }
+  void config_exclude_fault(ExcludeFromHaveFault exclude_fault) { 
+    this->exclude_clock_fault_from_have_faults_ = (exclude_fault == ExcludeFromHaveFault::CLOCK_FAULT); 
+  }
   #endif
 
   void enable_dac(bool enable);
@@ -163,7 +174,6 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
 
     uint32_t          times_faults_cleared{0};
 
-    Tas5805mFault     faults;         // initialised in setup
 
     #ifdef USE_TAS5805M_EQ
     bool              eq_enabled;
@@ -171,16 +181,19 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
     #endif
    } tas5805m_state_;
 
-   AutoRefreshMode auto_refresh_; // configured by YAML with default 'BY_GAIN'
+   Tas5805mFault tas5805m_faults_;         // initialised in setup
+
+   AutoRefreshMode auto_refresh_;  // configured through YAML with default 'BY_GAIN'
+   bool consider_clock_faults_when_clearing_faults_; // configured via with default = true
 
    #ifdef USE_TAS5805M_BINARY_SENSOR
-   bool exclude_fault_; // configured through YAML
+   bool exclude_clock_fault_from_have_faults_; // configured via YAML with default = false
    #endif
 
-   bool had_fault_last_update_{true}; // true ensure sensor are updated on first update
-   bool have_fault_{false}; // false will skip clear fault registers on first update
-   bool faults_excluding_clock_fault_{false};
+   bool had_fault_last_update_{true}; // true ensures sensor are updated on first update
+   bool have_fault_to_clear_{false}; // false will skip clear fault registers on first update
 
+   bool is_new_common_fault_{false}
    bool is_new_channel_fault_{false};
    bool is_new_global_fault_{false};
 

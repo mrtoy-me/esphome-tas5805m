@@ -44,10 +44,10 @@ void Tas5805mComponent::setup() {
   this->tas5805m_state_.raw_volume_min = (uint8_t)((this->tas5805m_state_.volume_min - 24) * -2);
 
   // initialise so first update publishes all binary sensors
-  this->tas5805m_state_.faults.channel_fault = 0xFF;
-  this->tas5805m_state_.faults.global_fault = 0xFF;
-  this->tas5805m_state_.faults.temperature_fault = 0xFF;
-  this->tas5805m_state_.faults.temperature_warning = 0xFF;
+  this->tas5805m_faults_.channel_fault = 0xFF;
+  this->tas5805m_faults_.global_fault = 0xFF;
+  this->tas5805m_faults_.temperature_fault = 0xFF;
+  this->tas5805m_faults_.temperature_warning = 0xFF;
 }
 
 bool Tas5805mComponent::configure_registers_() {
@@ -179,7 +179,7 @@ void Tas5805mComponent::update() {
   }
 
   // if there was a fault last update then clear any faults
-  if (this->have_fault_) {
+  if (this->have_fault_to_clear_) {
     this->had_fault_last_update_ = true;
     if (!this->clear_fault_registers_()) {
       ESP_LOGW(TAG, "%sclearing faults", ERROR);
@@ -190,18 +190,12 @@ void Tas5805mComponent::update() {
     ESP_LOGW(TAG, "%sreading faults", ERROR);
     return;
   }
+  
+  // is there a fault that should be cleared
+  this->have_fault_to_clear_ = 
+     ((this->tas5805m_faults_.clock_fault && this->consider_clock_faults_when_clearing_faults_ ) || this->tas5805m_faults_.any_fault_except_clock_fault);
 
-  this->faults_excluding_clock_fault_ = ( this->tas5805m_state_.faults.channel_fault ||
-                                          this->tas5805m_state_.faults.global_fault ||
-                                          this->tas5805m_state_.faults.temperature_fault ||
-                                          this->tas5805m_state_.faults.temperature_warning );
-
-  this->have_fault_ = (this->tas5805m_state_.faults.clock_fault || this->faults_excluding_clock_fault_);
-
-  // skip sensor update if there is no possibility of state change in any faults
-  if ((!this->had_fault_last_update_) && (!this->have_fault_)) return;
-
-  this->had_fault_last_update_ = false;
+   
 
   #ifdef USE_TAS5805M_BINARY_SENSOR
   this->publish_faults_();
@@ -211,22 +205,19 @@ void Tas5805mComponent::update() {
 #ifdef USE_TAS5805M_BINARY_SENSOR
 void Tas5805mComponent::publish_faults_() {
   if (this->have_fault_binary_sensor_ != nullptr) {
-    if (this->exclude_fault_ )
-      this->have_fault_binary_sensor_->publish_state(this->faults_excluding_clock_fault_);
-    else
-      this->have_fault_binary_sensor_->publish_state(this->have_fault_);
+    this->have_fault_binary_sensor_->publish_state(this->tas5805m_faults_.have_fault);
   }
 
   if (this->clock_fault_binary_sensor_ != nullptr) {
-    this->clock_fault_binary_sensor_->publish_state(this->tas5805m_state_.faults.clock_fault);
+    this->clock_fault_binary_sensor_->publish_state(this->tas5805m_faults_.clock_fault);
   }
 
   if (this->over_temperature_shutdown_fault_binary_sensor_ != nullptr) {
-    this->over_temperature_shutdown_fault_binary_sensor_->publish_state(this->tas5805m_state_.faults.temperature_fault);
+    this->over_temperature_shutdown_fault_binary_sensor_->publish_state(this->tas5805m_faults_.temperature_fault);
   }
 
   if (this->over_temperature_warning_binary_sensor_ != nullptr) {
-    this->over_temperature_warning_binary_sensor_->publish_state(this->tas5805m_state_.faults.temperature_warning);
+    this->over_temperature_warning_binary_sensor_->publish_state(this->tas5805m_faults_.temperature_warning);
   }
 
   // publish channel and global faults in separate loop iterations to spread component time when publishing binary sensors
@@ -242,19 +233,19 @@ void Tas5805mComponent::publish_faults_() {
 
 void Tas5805mComponent::publish_channel_faults_() {
   if (this->right_channel_over_current_fault_binary_sensor_ != nullptr) {
-    this->right_channel_over_current_fault_binary_sensor_->publish_state(this->tas5805m_state_.faults.channel_fault & (1 << 0));
+    this->right_channel_over_current_fault_binary_sensor_->publish_state(this->tas5805m_faults_.channel_fault & (1 << 0));
   }
 
   if (this->left_channel_over_current_fault_binary_sensor_ != nullptr) {
-    this->left_channel_over_current_fault_binary_sensor_->publish_state(this->tas5805m_state_.faults.channel_fault & (1 << 1));
+    this->left_channel_over_current_fault_binary_sensor_->publish_state(this->tas5805m_faults_.channel_fault & (1 << 1));
   }
 
   if (this->right_channel_dc_fault_binary_sensor_ != nullptr) {
-    this->right_channel_dc_fault_binary_sensor_->publish_state(this->tas5805m_state_.faults.channel_fault & (1 << 2));
+    this->right_channel_dc_fault_binary_sensor_->publish_state(this->tas5805m_faults_.channel_fault & (1 << 2));
   }
 
   if (this->left_channel_dc_fault_binary_sensor_ != nullptr) {
-    this->left_channel_dc_fault_binary_sensor_->publish_state(this->tas5805m_state_.faults.channel_fault & (1 << 3));
+    this->left_channel_dc_fault_binary_sensor_->publish_state(this->tas5805m_faults_.channel_fault & (1 << 3));
   }
 
   if (this->is_new_global_fault_) {
@@ -265,19 +256,19 @@ void Tas5805mComponent::publish_channel_faults_() {
 
 void Tas5805mComponent::publish_global_faults_() {
   if (this->pvdd_under_voltage_fault_binary_sensor_ != nullptr) {
-    this->pvdd_under_voltage_fault_binary_sensor_->publish_state(this->tas5805m_state_.faults.global_fault & (1 << 0));
+    this->pvdd_under_voltage_fault_binary_sensor_->publish_state(this->tas5805m_faults_.global_fault & (1 << 0));
   }
 
   if (this->pvdd_over_voltage_fault_binary_sensor_ != nullptr) {
-    this->pvdd_over_voltage_fault_binary_sensor_->publish_state(this->tas5805m_state_.faults.global_fault & (1 << 1));
+    this->pvdd_over_voltage_fault_binary_sensor_->publish_state(this->tas5805m_faults_.global_fault & (1 << 1));
   }
 
   if (this->bq_write_failed_fault_binary_sensor_ != nullptr) {
-    this->bq_write_failed_fault_binary_sensor_->publish_state(this->tas5805m_state_.faults.global_fault & (1 << 6));
+    this->bq_write_failed_fault_binary_sensor_->publish_state(this->tas5805m_faults_.global_fault & (1 << 6));
   }
 
   if (this->otp_crc_check_error_binary_sensor_ != nullptr) {
-    this->otp_crc_check_error_binary_sensor_->publish_state(this->tas5805m_state_.faults.global_fault & (1 << 7));
+    this->otp_crc_check_error_binary_sensor_->publish_state(this->tas5805m_faults_.global_fault & (1 << 7));
   }
 }
 #endif
@@ -309,7 +300,7 @@ void Tas5805mComponent::dump_config() {
   #ifdef USE_TAS5805M_BINARY_SENSOR
   ESP_LOGCONFIG(TAG, "Tas5805m Binary Sensors:");
   LOG_BINARY_SENSOR("  ", "Any Faults", this->have_fault_binary_sensor_);
-  if (this->exclude_fault_) {
+  if (this->exclude_clock_fault_from_have_faults_) {
     ESP_LOGCONFIG(TAG, "    Exclude: CLOCK FAULTS");
   }
   LOG_BINARY_SENSOR("  ", "Right Channel Over Current", this->right_channel_over_current_fault_binary_sensor_);
@@ -725,26 +716,60 @@ bool Tas5805mComponent::read_fault_registers_() {
   if (!this->tas5805m_read_bytes_(TAS5805M_CHAN_FAULT, current_faults, 4)) return false;
 
   // check if any change CHAN_FAULT register as it contains 4 fault conditions(binary sensors)
-  this->is_new_channel_fault_ = (current_faults[0] != this->tas5805m_state_.faults.channel_fault);
+  this->is_new_channel_fault_ = (current_faults[0] != this->tas5805m_faults_.channel_fault);
   if (this->is_new_channel_fault_) {
-    this->tas5805m_state_.faults.channel_fault = current_faults[0];
+    this->tas5805m_faults_.channel_fault = current_faults[0];
   }
 
   // separate clock fault from GLOBAL_FAULT1 register since clock faults can occur often
   // check if any change in GLOBAL_FAULT1 register as it contains 4 fault conditions(binary sensors) excluding clock fault
   uint8_t current_global_fault = current_faults[1] & REMOVE_CLOCK_FAULT;
-  this->is_new_global_fault_ = (current_global_fault != this->tas5805m_state_.faults.global_fault);
+  this->is_new_global_fault_ = (current_global_fault != this->tas5805m_faults_.global_fault);
   if (this->is_new_global_fault_) {
-    this->tas5805m_state_.faults.global_fault = current_global_fault;
+    this->tas5805m_faults_.global_fault = current_global_fault;
   }
 
-  this->tas5805m_state_.faults.clock_fault = (current_faults[1] & (1 << 2));
+  bool new_fault_state; // reuse for next group of faults for temporary storage new fault state
+  bool is_new_fault; // reuse for next group of faults for whether state of fault has changed
+  
+  new_fault_state = (current_faults[1] & (1 << 2));
+  is_new_fault = (new_fault_state != this->tas5805m_faults_.clock_fault);
+  if (is_new_fault) {
+    this->tas5805m_faults_.clock_fault = new_fault_state;
+  }
+  this-> is_new_common_fault_ = is_new_fault;
 
   // over temperature fault is only fault condition in global_fault2 register
-  this->tas5805m_state_.faults.temperature_fault = current_faults[2];
+  new_fault_state = current_faults[2];
+  is_new_fault = (new_fault_state != this->tas5805m_faults_.temperature_fault);
+  if (is_new_fault) {
+    this->tas5805m_faults_.temperature_fault = new_fault_state;
+  }
+  this-> is_new_common_fault_ = this-> is_new_common_fault_ || is_new_fault;
 
   // over temperature warning is only fault condition in ot_warning register
-  this->tas5805m_state_.faults.temperature_warning = current_faults[3];
+  new_fault_state = current_faults[3];
+  is_new_fault = (new_fault_state != this->tas5805m_faults_.temperature_warning);
+  if (is_new_fault) {
+    this->tas5805m_faults_.temperature_warning = new_fault_state;
+  }
+  this-> is_new_common_fault_ = this-> is_new_common_fault_ || is_new_fault;
+
+  this->tas5805m_faults_.any_fault_except_clock_fault = 
+    ( this->tas5805m_faults_.channel_fault || this->tas5805m_faults_.global_fault ||
+      this->tas5805m_faults_.temperature_fault || this->tas5805m_faults_.temperature_warning );
+
+  if (this->exclude_clock_fault_from_have_faults_ ) {
+    new_fault_state = this->tas5805m_faults_.any_fault_except_clock_fault;
+  } else {
+    new_fault_state = (this->tas5805m_faults_.any_fault_except_clock_fault || this->tas5805m_faults_.clock_fault);
+  }
+  
+  is_new_fault = (new_fault_state != this->tas5805_faults_.have_fault_);
+  if (is_new_fault) {
+    this->tas5805_faults_.have_fault_ = new_fault_state;
+  }
+  this-> is_new_common_fault_ = this-> is_new_common_fault_ || is_new_fault;
 
   return true;
 }

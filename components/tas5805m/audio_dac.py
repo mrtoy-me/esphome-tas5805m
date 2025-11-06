@@ -14,13 +14,14 @@ DEPENDENCIES = ["i2c"]
 
 CONF_ANALOG_GAIN = "analog_gain"
 CONF_DAC_MODE = "dac_mode"
+CONF_IGNORE_FAULTS = "ignore_faults"
 CONF_MIXER_MODE = "mixer_mode"
 CONF_REFRESH_EQ = "refresh_eq"
 CONF_VOLUME_MIN = "volume_min"
 CONF_VOLUME_MAX = "volume_max"
-CONF_ON_TEMPERATURE_WARNING = "on_temperature_warning"
-CONF_REDUCE_VOLUME = "reduce_volume"
-CONF_TAS5805M_ID = "tas5805m_id"
+# CONF_ON_TEMPERATURE_WARNING = "on_temperature_warning"
+# CONF_REDUCE_VOLUME = "reduce_volume"
+# CONF_TAS5805M_ID = "tas5805m_id"
 
 tas5805m_ns = cg.esphome_ns.namespace("tas5805m")
 Tas5805mComponent = tas5805m_ns.class_("Tas5805mComponent", AudioDac, cg.PollingComponent, i2c.I2CDevice)
@@ -35,6 +36,12 @@ DacMode = tas5805m_ns.enum("DacMode")
 DAC_MODES = {
     "BTL" : DacMode.BTL,
     "PBTL": DacMode.PBTL,
+}
+
+IgnoreFaultsMode = tas5805m_ns.enum("IgnoreFaultsMode")
+IGNORE_FAULTS_MODES = {
+    "NONE" : IgnoreFaultsMode.NONE,
+    "CLOCK_FAULT": IgnoreFaultsMode.CLOCK_FAULT,
 }
 
 MixerMode = tas5805m_ns.enum("MixerMode")
@@ -67,6 +74,9 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(CONF_DAC_MODE, default="BTL"): cv.enum(
                         DAC_MODES, upper=True
             ),
+            cv.Optional(CONF_IGNORE_FAULTS, default="NONE"): cv.enum(
+                        IGNORE_FAULTS_MODES, upper=True
+            ),
             cv.Optional(CONF_MIXER_MODE, default="STEREO"): cv.enum(
                         MIXER_MODES, upper=True
             ),
@@ -96,6 +106,7 @@ async def to_code(config):
     cg.add(var.set_enable_pin(enable))
     cg.add(var.config_analog_gain(config[CONF_ANALOG_GAIN]))
     cg.add(var.config_dac_mode(config[CONF_DAC_MODE]))
+    cg.add(var.config_ignore_faults_mode(config[CONF_IGNORE_FAULTS]))
     cg.add(var.config_mixer_mode(config[CONF_MIXER_MODE]))
     cg.add(var.config_refresh_eq(config[CONF_REFRESH_EQ]))
     cg.add(var.config_volume_max(config[CONF_VOLUME_MAX]))
