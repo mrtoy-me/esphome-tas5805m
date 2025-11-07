@@ -34,7 +34,7 @@ void Tas5805mComponent::setup() {
     this->enable_pin_->digital_write(true);
   }
 
-  if (!configure_registers_()) {
+  if (!this->configure_registers_()) {
     this->error_code_ = CONFIGURATION_FAILED;
     this->mark_failed();
   }
@@ -47,16 +47,16 @@ void Tas5805mComponent::setup() {
 bool Tas5805mComponent::configure_registers_() {
   uint16_t i = 0;
   uint16_t counter = 0;
-  uint16_t number_configurations = sizeof(tas5805m_registers) / sizeof(tas5805m_registers[0]);
+  uint16_t number_configurations = sizeof(TAS5805M_REGISTERS) / sizeof(TAS5805M_REGISTERS[0]);
 
   while (i < number_configurations) {
-    switch (tas5805m_registers[i].offset) {
+    switch (TAS5805M_REGISTERS[i].offset) {
       case TAS5805M_CFG_META_DELAY:
-        if (tas5805m_registers[i].value > ESPHOME_MAXIMUM_DELAY) return false;
-        delay(tas5805m_registers[i].value);
+        if (TAS5805M_REGISTERS[i].value > ESPHOME_MAXIMUM_DELAY) return false;
+        delay(TAS5805M_REGISTERS[i].value);
         break;
       default:
-        if (!this->tas5805m_write_byte_(tas5805m_registers[i].offset, tas5805m_registers[i].value)) return false;
+        if (!this->tas5805m_write_byte_(TAS5805M_REGISTERS[i].offset, TAS5805M_REGISTERS[i].value)) return false;
         counter++;
         break;
     }
@@ -164,7 +164,7 @@ void Tas5805mComponent::update() {
     if(!this->update_delay_finished_) return;
 
     // finished delay so clear faults
-    if (!tas5805m_write_byte_(TAS5805M_FAULT_CLEAR, TAS5805M_ANALOG_FAULT_CLEAR)) {
+    if (!this->tas5805m_write_byte_(TAS5805M_FAULT_CLEAR, TAS5805M_ANALOG_FAULT_CLEAR)) {
       ESP_LOGW(TAG, "%sinitialising faults", ERROR);
     }
 
@@ -191,7 +191,7 @@ void Tas5805mComponent::update() {
   
   // is there a fault that should be cleared next update
   this->have_fault_to_clear_ = 
-     ((this->tas5805m_faults_.clock_fault && this->consider_clock_faults_when_clearing_faults_ ) || this->tas5805m_faults_.have_fault_except_clock_fault);
+     ((this->tas5805m_faults_.clock_fault && (!this->ignore_clock_faults_when_clearing_faults_) ) || this->tas5805m_faults_.have_fault_except_clock_fault);
 
 
   // if no change in faults bypass publishing
@@ -294,11 +294,11 @@ void Tas5805mComponent::dump_config() {
               "  Analog Gain: %3.1fdB\n"
               "  Maximum Volume: %idB\n"
               "  Minimum Volume: %idB\n",
-              "  Trigger Clearing of Faults: %s\n",
+              "  Clear Faults: %s\n",
               this->number_registers_configured_, this->tas5805m_dac_mode_ ? "PBTL" : "BTL",
               MIXER_MODE_TEXT[this->tas5805m_mixer_mode_], this->tas5805m_analog_gain_,
               this->tas5805m_volume_max_, this->tas5805m_volume_min_,
-              this->consider_clock_faults_when_clearing_faults_ ? "ANY FAULT" : "IGNORE CLOCK FAULTS");
+              this->ignore_clock_faults_when_clearing_faults_ ? "IGNORE CLOCK FAULTS" : "CONSIDER ALL FAULTS");
     
       LOG_UPDATE_INTERVAL(this);
       break;
@@ -335,7 +335,7 @@ void Tas5805mComponent::enable_dac(bool enable) {
 // used by 'enable_eq_switch'
 bool Tas5805mComponent::enable_eq(bool enable) {
   #ifdef USE_TAS5805M_EQ
-  enable ? set_eq_on_() : set_eq_off_();
+  enable ? this->set_eq_on_() : this->set_eq_off_();
   #endif
   return true;
 }
@@ -375,7 +375,7 @@ bool Tas5805mComponent::set_eq_gain(uint8_t band, int8_t gain) {
     return false;
   }
 
-  if(!tas5805m_write_bytes_(reg_value->offset1, const_cast<uint8_t *>(reg_value->value), reg_value->bytes_in_block1)) {
+  if(!this->tas5805m_write_bytes_(reg_value->offset1, const_cast<uint8_t *>(reg_value->value), reg_value->bytes_in_block1)) {
     ESP_LOGE(TAG, "%s%s%d Gain: offset 0x%02X for %d bytes", ERROR, EQ_BAND, band, reg_value->offset1, reg_value->bytes_in_block1);
   }
 
@@ -386,7 +386,7 @@ bool Tas5805mComponent::set_eq_gain(uint8_t band, int8_t gain) {
       ESP_LOGE(TAG, "%s%s%d @ page 0x%02X", ERROR, EQ_BAND, band, next_page);
       return false;
     }
-    if(!tas5805m_write_bytes_(reg_value->offset2, const_cast<uint8_t *>(reg_value->value + reg_value->bytes_in_block1), bytes_in_block2)) {
+    if(!this->tas5805m_write_bytes_(reg_value->offset2, const_cast<uint8_t *>(reg_value->value + reg_value->bytes_in_block1), bytes_in_block2)) {
       ESP_LOGE(TAG, "%s%s%d Gain: offset 0x%02X for %d bytes", ERROR, EQ_BAND, band, reg_value->offset2, bytes_in_block2);
       return false;
     }
@@ -449,7 +449,7 @@ bool Tas5805mComponent::use_eq_switch_refresh() {
 
 float Tas5805mComponent::volume() {
   uint8_t raw_volume;
-  get_digital_volume_(&raw_volume);
+  this->get_digital_volume_(&raw_volume);
 
   return remap<float, uint8_t>(raw_volume, this->tas5805m_raw_volume_min_,
                                            this->tas5805m_raw_volume_max_,
@@ -710,7 +710,7 @@ bool Tas5805mComponent::set_state_(ControlState state) {
 }
 
 bool Tas5805mComponent::clear_fault_registers_() {
-  if (!tas5805m_write_byte_(TAS5805M_FAULT_CLEAR, TAS5805M_ANALOG_FAULT_CLEAR)) return false;
+  if (!this->tas5805m_write_byte_(TAS5805M_FAULT_CLEAR, TAS5805M_ANALOG_FAULT_CLEAR)) return false;
   this->times_faults_cleared_++;
   ESP_LOGD(TAG, "Faults cleared");
   return true;
@@ -744,22 +744,17 @@ bool Tas5805mComponent::read_fault_registers_() {
 
   bool new_fault_state; // reuse for temporary storage of new fault state
   
-  // extract clock faults
+  // process clock_fault binary sensor
   new_fault_state = (current_faults[1] & (1 << 2));
   this->is_new_common_fault_ = (new_fault_state != this->tas5805m_faults_.clock_fault);
   this->tas5805m_faults_.clock_fault = new_fault_state;
 
+  // process have_fault binary sensor
   this->tas5805m_faults_.have_fault_except_clock_fault = 
     ( this->tas5805m_faults_.channel_fault || this->tas5805m_faults_.global_fault ||
       this->tas5805m_faults_.temperature_fault || this->tas5805m_faults_.temperature_warning );
   
-  // assign have_fault binary sensor
-  if (this->exclude_clock_fault_from_have_faults_ ) {
-    new_fault_state = this->tas5805m_faults_.have_fault_except_clock_fault;
-  } else {
-    new_fault_state = (this->tas5805m_faults_.have_fault_except_clock_fault || this->tas5805m_faults_.clock_fault);
-  }
-  
+  new_fault_state = (this->tas5805m_faults_.have_fault_except_clock_fault || (this->tas5805m_faults_.clock_fault && (!this->exclude_clock_fault_from_have_faults_)));
   this->is_new_common_fault_ = this->is_new_common_fault_ || (new_fault_state != this->tas5805m_faults_.have_fault);
   this->tas5805m_faults_.have_fault = new_fault_state;
 
@@ -786,7 +781,7 @@ bool Tas5805mComponent::set_book_and_page_(uint8_t book, uint8_t page) {
 }
 
 bool Tas5805mComponent::tas5805m_read_byte_(uint8_t a_register, uint8_t* data) {
-  return tas5805m_read_bytes_(a_register, data, 1);
+  return this->tas5805m_read_bytes_(a_register, data, 1);
 }
 
 bool Tas5805mComponent::tas5805m_read_bytes_(uint8_t a_register, uint8_t* data, uint8_t number_bytes) {
