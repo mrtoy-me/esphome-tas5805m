@@ -298,7 +298,7 @@ void Tas5805mComponent::dump_config() {
               MIXER_MODE_TEXT[this->tas5805m_mixer_mode_], this->tas5805m_analog_gain_,
               this->tas5805m_volume_max_, this->tas5805m_volume_min_);
       if (this->ignore_clock_faults_when_clearing_faults_) {
-        ESP_LOGCONFIG(TAG,  "  Clear Faults Trigger: IGNORE CLOCK FAULTS");
+        ESP_LOGCONFIG(TAG,  "  Ignore Fault: CLOCK FAULTS");
       }
       LOG_UPDATE_INTERVAL(this);
       break;
