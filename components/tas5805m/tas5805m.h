@@ -46,8 +46,8 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
 
   void config_dac_mode(DacMode dac_mode) {this->tas5805m_dac_mode_ = dac_mode; }
 
-  void config_ignore_faults_mode(ExcludeIgnoreModes ignore_faults_mode) {
-    this->ignore_clock_faults_when_clearing_faults_ = (ignore_faults_mode == ExcludeIgnoreModes::CLOCK_FAULT);
+  void config_ignore_fault_mode(ExcludeIgnoreModes ignore_fault_mode) {
+    this->ignore_clock_faults_when_clearing_faults_ = (ignore_fault_mode == ExcludeIgnoreModes::CLOCK_FAULT);
   }
 
   void config_mixer_mode(MixerMode mixer_mode) {this->tas5805m_mixer_mode_ = mixer_mode; }
@@ -73,8 +73,8 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
   SUB_BINARY_SENSOR(over_temperature_shutdown_fault)
   SUB_BINARY_SENSOR(over_temperature_warning)
 
-  void config_exclude_fault(ExcludeIgnoreModes exclude_fault) { 
-    this->exclude_clock_fault_from_have_faults_ = (exclude_fault == ExcludeIgnoreModes::CLOCK_FAULT); 
+  void config_exclude_fault(ExcludeIgnoreModes exclude_fault) {
+    this->exclude_clock_fault_from_have_faults_ = (exclude_fault == ExcludeIgnoreModes::CLOCK_FAULT);
   }
   #endif
 
@@ -167,8 +167,8 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
 
    int8_t tas5805m_volume_max_;
    int8_t tas5805m_volume_min_;
-   
-   MixerMode tas5805m_mixer_mode_; 
+
+   MixerMode tas5805m_mixer_mode_;
 
    // used if eq gain numbers are defined in YAML
    #ifdef USE_TAS5805M_EQ
@@ -179,13 +179,13 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
    // initialised in setup
    ControlState tas5805m_control_state_;
 
-   uint8_t tas5805m_raw_volume_max_;      
+   uint8_t tas5805m_raw_volume_max_;
    uint8_t tas5805m_raw_volume_min_;
-   
-   // fault processing 
+
+   // fault processing
    bool have_fault_to_clear_{false}; // false so clear fault registers is skipped on first update
 
-   // has the state of any fault in group changed - used to conditionally publish binary sensors 
+   // has the state of any fault in group changed - used to conditionally publish binary sensors
    // true so all binary sensors are published on first update
    bool is_new_channel_fault_{true};
    bool is_new_common_fault_{true};
@@ -211,8 +211,8 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
    // when 'refresh_settings_complete_' is false and 'refresh_settings_triggered_' is true
    // 'loop' will write mixer mode and if setup in YAML, also eq gains
    bool refresh_settings_triggered_{false};
-   
-   // use to indicate if delay before starting 'update' starting is complete 
+
+   // use to indicate if delay before starting 'update' starting is complete
    bool update_delay_finished_{false};
 
    // are eq gain numbers configured in YAML
@@ -227,11 +227,11 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
 
    // last i2c error, if there is error shown by 'dump_config'
    uint8_t i2c_error_{0};
-   
-   // used for counting number of 'loops' iterations for delay of starting 'loop'  
+
+   // used for counting number of 'loops' iterations for delay of starting 'loop'
    uint8_t loop_counter_{0};
-   
-   // number tas5805m registers configured during 'setup' 
+
+   // number tas5805m registers configured during 'setup'
    uint16_t number_registers_configured_{0};
 
    // initialised in loop, used for delay in starting 'update'
