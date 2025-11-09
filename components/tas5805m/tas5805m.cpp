@@ -188,9 +188,9 @@ void Tas5805mComponent::update() {
     ESP_LOGW(TAG, "%sreading faults", ERROR);
     return;
   }
-  
+
   // is there a fault that should be cleared next update
-  this->have_fault_to_clear_ = 
+  this->have_fault_to_clear_ =
      ((this->tas5805m_faults_.clock_fault && (!this->ignore_clock_faults_when_clearing_faults_) ) || this->tas5805m_faults_.have_fault_except_clock_fault);
 
 
@@ -294,12 +294,12 @@ void Tas5805mComponent::dump_config() {
               "  Analog Gain: %3.1fdB\n"
               "  Maximum Volume: %idB\n"
               "  Minimum Volume: %idB\n",
-              "  Clear Faults: %s\n",
               this->number_registers_configured_, this->tas5805m_dac_mode_ ? "PBTL" : "BTL",
               MIXER_MODE_TEXT[this->tas5805m_mixer_mode_], this->tas5805m_analog_gain_,
-              this->tas5805m_volume_max_, this->tas5805m_volume_min_,
-              this->ignore_clock_faults_when_clearing_faults_ ? "IGNORE CLOCK FAULTS" : "CONSIDER ALL FAULTS");
-    
+              this->tas5805m_volume_max_, this->tas5805m_volume_min_);
+      if (this->ignore_clock_faults_when_clearing_faults_) {
+        ESP_LOGCONFIG(TAG,  "  Clear Faults Trigger: IGNORE CLOCK FAULTS"
+      }
       LOG_UPDATE_INTERVAL(this);
       break;
   }
@@ -721,13 +721,13 @@ bool Tas5805mComponent::read_fault_registers_() {
 
   // read all faults registers
   if (!this->tas5805m_read_bytes_(TAS5805M_CHAN_FAULT, current_faults, 4)) return false;
-  
-  // note: new state is saved regardless as it is not worth conditionally saving state based on whether state has changed 
+
+  // note: new state is saved regardless as it is not worth conditionally saving state based on whether state has changed
 
   // check if any change CHAN_FAULT register as it contains 4 fault conditions(binary sensors)
   this->is_new_channel_fault_ = (current_faults[0] != this->tas5805m_faults_.channel_fault);
   this->tas5805m_faults_.channel_fault = current_faults[0];
-  
+
   // separate clock fault from GLOBAL_FAULT1 register since clock faults can occur often
   // check if any change in GLOBAL_FAULT1 register as it contains 4 fault conditions(binary sensors) excluding clock fault
   uint8_t current_global_fault = current_faults[1] & REMOVE_CLOCK_FAULT;
@@ -737,23 +737,23 @@ bool Tas5805mComponent::read_fault_registers_() {
   // over temperature fault is only fault condition in global_fault2 register
   this->is_new_over_temperature_issue_ = (current_faults[2] != this->tas5805m_faults_.temperature_fault);
   this->tas5805m_faults_.temperature_fault = current_faults[2];
-  
+
   // over temperature warning is only fault condition in ot_warning register
   this->is_new_over_temperature_issue_ = (this->is_new_over_temperature_issue_ || (current_faults[3] != this->tas5805m_faults_.temperature_warning));
   this->tas5805m_faults_.temperature_warning = current_faults[3];
 
   bool new_fault_state; // reuse for temporary storage of new fault state
-  
+
   // process clock_fault binary sensor
   new_fault_state = (current_faults[1] & (1 << 2));
   this->is_new_common_fault_ = (new_fault_state != this->tas5805m_faults_.clock_fault);
   this->tas5805m_faults_.clock_fault = new_fault_state;
 
   // process have_fault binary sensor
-  this->tas5805m_faults_.have_fault_except_clock_fault = 
+  this->tas5805m_faults_.have_fault_except_clock_fault =
     ( this->tas5805m_faults_.channel_fault || this->tas5805m_faults_.global_fault ||
       this->tas5805m_faults_.temperature_fault || this->tas5805m_faults_.temperature_warning );
-  
+
   new_fault_state = (this->tas5805m_faults_.have_fault_except_clock_fault || (this->tas5805m_faults_.clock_fault && (!this->exclude_clock_fault_from_have_faults_)));
   this->is_new_common_fault_ = this->is_new_common_fault_ || (new_fault_state != this->tas5805m_faults_.have_fault);
   this->tas5805m_faults_.have_fault = new_fault_state;
