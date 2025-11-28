@@ -71,7 +71,7 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(CONF_DAC_MODE, default="BTL"): cv.enum(
                         DAC_MODES, upper=True
             ),
-            cv.Optional(CONF_IGNORE_FAULT, default="NONE"): cv.enum(
+            cv.Optional(CONF_IGNORE_FAULT, default="CLOCK_FAULT"): cv.enum(
                         EXCLUDE_IGNORE_MODES, upper=True
             ),
             cv.Optional(CONF_MIXER_MODE, default="STEREO"): cv.enum(

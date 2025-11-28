@@ -189,26 +189,28 @@ audio_dac:
     update_interval: 1s
 ```
 Configuration variables:
-- **enable_pin:** (*Required*): GPIOxx, enable pin of ESP32 Louder
+- **enable_pin:** (*Required*): GPIOxx, enable pin of ESP32 Louder.
 
-- **analog_gain:** (*Optional*): dB values from -15.5dB to 0dB in 0.5dB increments
-  Defaults to -15.5dbB. A setting of -15.5db is typical when
-  5v is used to power the Louder
+- **analog_gain:** (*Optional*): dB values from -15.5dB to 0dB in 0.5dB increments.
+  Defaults to -15.5dbB. A setting of -15.5db is typical when 5v is used to power the Louder.
 
-- **dac_mode:** (*Optional*): valid values BTL or PBTL. Defaults to BTL
+- **dac_mode:** (*Optional*): valid values BTL or PBTL. Defaults to BTL.
 
 - **mixer_mode:** (*Optional*): values STEREO, INVERSE_STEREO, MONO, LEFT or RIGHT
   Defaults to STEREO. Note: for PBTL Dac Mode, only MONO, LEFT or RIGHT are valid.
 
-- **volume_max:** (*Optional*): whole dB values from -103dB to 24dB. Defaults to 24dB
+- **volume_max:** (*Optional*): whole dB values from -103dB to 24dB. Defaults to 24dB.
 
-- **volume_min:** (*Optional*): whole dB values from -103dB to 24dB. Defaults to -103dB
+- **volume_min:** (*Optional*): whole dB values from -103dB to 24dB. Defaults to -103dB.
+
+- **ignore_fault:** (*Optional*): allows ignoring of certain faults from triggering clearing of the TAS5805M fault registers.
+  Valid options are **NONE** and **CLOCK_FAULT**. Default is **CLOCK_FAULT**.
 
 - **update_interval:** (*Optional*): defines the interval (seconds) at which faults will be
-  checked and then if detected will be cleared at next interval. Defaults to 1s.
+  checked and then if detected clearing of the TAS5805M fault registers at next interval. Defaults to 1s.
   **Note:** update interval cannot be reduced below 1s.
 
-- **refresh_eq:** (*Optional*): valid values BY_GAIN or BY_SWITCH. Defaults to BY_GAIN
+- **refresh_eq:** (*Optional*): valid values BY_GAIN or BY_SWITCH. Defaults to BY_GAIN.
   This setting can normally be ignored and omitted if you are using Speaker
   Mediaplayer component and is intended for use when Snapcast client component
   is used instead of Speaker Mediaplayer. When a Snapcast client component is
@@ -247,13 +249,13 @@ Configuration headers:
 - **enable_dac:** (*Optional*): allows the definition of a switch to enable/disable
   the TAS5805M DAC. Switch On (enabled) places TAS5805M into Play mode while
   Switch Off (disabled) places TAS5805M into low power Sleep mode.
-    Configuration variables:
+  Configuration variables:
     - **restore_mode:** (optional but recommended): **ALWAYS_ON** is recommended.
 
 - **enable_eq:** (*Optional*): allows the definition of a switch to turn on/off
   the TAS5805M DAC EQ Control Mode. Switch On enables TAS5805M EQ Control while
   Switch Off disables TAS5805M EQ Control.
-    Configuration variables:
+  Configuration variables:
     - **restore_mode:** (optional but recommended): **RESTORE_DEFAULT_ON** is
       recommended for typical use case where speaker mediaplayer is use for audio.
       For use case, where SnapCast client component is used instead of
@@ -320,10 +322,14 @@ one binary sensor **have_fault:** is configured. The **have_fault:** binary sens
 activates if any the TAS5805M faults conditions activate.
 
 **have_fault:** Configuration variable:
-  - **exclude:** (optional): **CLOCK_FAULT** allows clock faults to be excluded from have_fault binary sensor.
-    Default is not to exclude clock faults from the have_fault binary sensor.
+  - The **have_fault:** binary sensor turns ON if any the TAS5805M faults conditions are ON, though by default clock faults are excluded.
+    Configuration variables:
+    **exclude:** (optional): Allows excluding clock faults from have_fault binary sensor.
+    Valid options are **NONE** and **CLOCK_FAULT**. Default is **CLOCK_FAULT** which excludes clock faults from have_fault binary sensor.
+    Excluding clock faults by default is selected since this fault is essentially a warning and
+    esphome mediaplayers generate clock faults because the I2S is manipulated to control music timing.
 
-**over_temp_warning:** 
+**over_temp_warning:**
   - To attempt to mitigate an over temperature upon receiving a over temperature, the volume can be decreased using **interval:**
     The "..._louder_idf_media.yaml" examples provide example configuration. For this YAML to take effect, the **mediaplayer:**  configuration must include configuration of the **volume_increment:**. Typically 5-10% should be suitable but depends on the dB range defined by the **volume_max:** and **volume_min:** under **audio_dac:**. The % equivalent to around 6dB decrease
     should have a benficial effect, but also depends on the update interval for checking faults.

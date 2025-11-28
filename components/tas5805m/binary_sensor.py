@@ -37,7 +37,7 @@ CONFIG_SCHEMA = {
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ).extend(
         {
-            cv.Optional(CONF_EXCLUDE, default="NONE"): cv.enum(
+            cv.Optional(CONF_EXCLUDE, default="CLOCK_FAULT"): cv.enum(
                         EXCLUDE_IGNORE_MODES, upper=True),
         }
     ),
