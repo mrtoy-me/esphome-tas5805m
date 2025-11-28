@@ -249,12 +249,14 @@ Configuration headers:
 - **enable_dac:** (*Optional*): allows the definition of a switch to enable/disable
   the TAS5805M DAC. Switch On (enabled) places TAS5805M into Play mode while
   Switch Off (disabled) places TAS5805M into low power Sleep mode.
+
   Configuration variables:
     - **restore_mode:** (optional but recommended): **ALWAYS_ON** is recommended.
 
 - **enable_eq:** (*Optional*): allows the definition of a switch to turn on/off
   the TAS5805M DAC EQ Control Mode. Switch On enables TAS5805M EQ Control while
   Switch Off disables TAS5805M EQ Control.
+
   Configuration variables:
     - **restore_mode:** (optional but recommended): **RESTORE_DEFAULT_ON** is
       recommended for typical use case where speaker mediaplayer is use for audio.
@@ -323,12 +325,12 @@ activates if any the TAS5805M faults conditions activate.
 
 **have_fault:** Configuration variable:
   - The **have_fault:** binary sensor turns ON if any TAS5805M faults conditions are ON, although note by default clock faults are excluded.
-    Configuration variables:
 
-    **exclude:** (optional): Allows excluding clock faults from have_fault binary sensor.
-    Valid options are **NONE** and **CLOCK_FAULT**. Default is **CLOCK_FAULT** which excludes clock faults from have_fault binary sensor.
-    Excluding clock faults by default is implemented since a clock fault is essentially a warning about unexpected behavior of I2S clock and
-    Esphome mediaplayers generate clock faults because the I2S is manipulated to control music timing.
+    Configuration variables:
+    - **exclude:** (optional): Allows excluding clock faults from have_fault binary sensor.
+      Valid options are **NONE** and **CLOCK_FAULT**. Default is **CLOCK_FAULT** which excludes clock faults from have_fault binary sensor.
+      Excluding clock faults by default is implemented since a clock fault is essentially a warning about unexpected behavior of I2S clock and
+      Esphome mediaplayers generate clock faults because the I2S is manipulated to control music timing.
 
 **over_temp_warning:**
   - To attempt to mitigate an over temperature upon receiving a over temperature, the volume can be decreased using **interval:**
