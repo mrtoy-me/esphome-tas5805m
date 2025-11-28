@@ -175,7 +175,7 @@ switch:
 
 ## Audio Dac
 
-Example typical configuration:
+Example configuration:
 ```
 audio_dac:
   - platform: tas5805m
@@ -186,6 +186,7 @@ audio_dac:
     mixer_mode: STEREO
     volume_max: 0dB
     volume_min: -60db
+    ignore_fault: CLOCK_FAULT
     update_interval: 1s
 ```
 Configuration variables:
@@ -203,11 +204,11 @@ Configuration variables:
 
 - **volume_min:** (*Optional*): whole dB values from -103dB to 24dB. Defaults to -103dB.
 
-- **ignore_fault:** (*Optional*): allows ignoring of certain faults from triggering clearing of the TAS5805M fault registers.
-  Valid options are **NONE** and **CLOCK_FAULT**. Default is **CLOCK_FAULT**.
+- **ignore_fault:** (*Optional*): allows ignoring of clock faults from triggering the clearing of the TAS5805M fault registers.
+  Valid options are **CLOCK_FAULT** and **NONE**. Default is **CLOCK_FAULT**, that is, to ignore clock faults when determining if TAS5805M fault registers require clearing. To trigger clearing of fault registers on any fault, specify **ignore_fault: NONE**.
 
 - **update_interval:** (*Optional*): defines the interval (seconds) at which faults will be
-  checked and then if detected clearing of the TAS5805M fault registers at next interval. Defaults to 1s.
+  checked and then if detected clearing of the TAS5805M fault registers will occur at next interval. Defaults to 1s.
   **Note:** update interval cannot be reduced below 1s.
 
 - **refresh_eq:** (*Optional*): valid values BY_GAIN or BY_SWITCH. Defaults to BY_GAIN.
@@ -249,12 +250,14 @@ Configuration headers:
 - **enable_dac:** (*Optional*): allows the definition of a switch to enable/disable
   the TAS5805M DAC. Switch On (enabled) places TAS5805M into Play mode while
   Switch Off (disabled) places TAS5805M into low power Sleep mode.
+
   Configuration variables:
     - **restore_mode:** (optional but recommended): **ALWAYS_ON** is recommended.
 
 - **enable_eq:** (*Optional*): allows the definition of a switch to turn on/off
   the TAS5805M DAC EQ Control Mode. Switch On enables TAS5805M EQ Control while
   Switch Off disables TAS5805M EQ Control.
+
   Configuration variables:
     - **restore_mode:** (optional but recommended): **RESTORE_DEFAULT_ON** is
       recommended for typical use case where speaker mediaplayer is use for audio.
@@ -318,16 +321,16 @@ Binary sensors can be configured which correspond to fault codes from the TAS580
 The tas5805m binary sensor platform has configuration headings for each binary sensor
 as shown below with an example name configured.
 All 12 binary sensors can be optionally defined but it is recommended that at minimum,
-one binary sensor **have_fault:** is configured. The **have_fault:** binary sensor
-activates if any the TAS5805M faults conditions activate.
+one binary sensor **have_fault:** is configured.
 
 **have_fault:** Configuration variable:
-  - The **have_fault:** binary sensor turns ON if any the TAS5805M faults conditions are ON, though by default clock faults are excluded.
+  - The **have_fault:** binary sensor turns ON if any TAS5805M faults conditions are ON, however note that by default clock faults are excluded.
+
     Configuration variables:
-    **exclude:** (optional): Allows excluding clock faults from have_fault binary sensor.
-    Valid options are **NONE** and **CLOCK_FAULT**. Default is **CLOCK_FAULT** which excludes clock faults from have_fault binary sensor.
-    Excluding clock faults by default is selected since this fault is essentially a warning and
-    esphome mediaplayers generate clock faults because the I2S is manipulated to control music timing.
+    - **exclude:** (optional): Allows excluding defined faults from have_fault binary sensor.
+      Valid options are **NONE** and **CLOCK_FAULT**. Default is **CLOCK_FAULT** which excludes clock faults from **have_fault** binary sensor. To include all faults, specify **exclude: NONE**.
+      Excluding clock faults by default is implemented since a clock fault is essentially a warning about unexpected behavior of the I2S clock and
+      Esphome mediaplayers generate clock faults because I2S is manipulated to control music timing.
 
 **over_temp_warning:**
   - To attempt to mitigate an over temperature upon receiving a over temperature, the volume can be decreased using **interval:**
