@@ -324,6 +324,7 @@ activates if any the TAS5805M faults conditions activate.
 **have_fault:** Configuration variable:
   - The **have_fault:** binary sensor turns ON if any TAS5805M faults conditions are ON, although note by default clock faults are excluded.
     Configuration variables:
+
     **exclude:** (optional): Allows excluding clock faults from have_fault binary sensor.
     Valid options are **NONE** and **CLOCK_FAULT**. Default is **CLOCK_FAULT** which excludes clock faults from have_fault binary sensor.
     Excluding clock faults by default is implemented since a clock fault is essentially a warning about unexpected behavior of I2S clock and
