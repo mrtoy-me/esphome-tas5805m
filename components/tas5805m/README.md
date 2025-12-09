@@ -204,7 +204,7 @@ Configuration variables:
 - **volume_min:** (*Optional*): whole dB values from -103dB to 24dB. Defaults to -103dB.
 
 - **ignore_fault:** (*Optional*): allows ignoring of clock faults from triggering clearing of the TAS5805M fault registers.
-  Valid options are **NONE** and **CLOCK_FAULT**. Default is **CLOCK_FAULT**.
+  Valid options are **CLOCK_FAULT** and **NONE**. Default is **CLOCK_FAULT**, that is, to ignore clock faults.
 
 - **update_interval:** (*Optional*): defines the interval (seconds) at which faults will be
   checked and then if detected clearing of the TAS5805M fault registers at next interval. Defaults to 1s.
@@ -320,16 +320,15 @@ Binary sensors can be configured which correspond to fault codes from the TAS580
 The tas5805m binary sensor platform has configuration headings for each binary sensor
 as shown below with an example name configured.
 All 12 binary sensors can be optionally defined but it is recommended that at minimum,
-one binary sensor **have_fault:** is configured. The **have_fault:** binary sensor
-activates if any the TAS5805M faults conditions activate.
+one binary sensor **have_fault:** is configured.
 
 **have_fault:** Configuration variable:
-  - The **have_fault:** binary sensor turns ON if any TAS5805M faults conditions are ON, although note by default clock faults are excluded.
+  - The **have_fault:** binary sensor turns ON if any TAS5805M faults conditions are ON, however note that by default clock faults are excluded.
 
     Configuration variables:
-    - **exclude:** (optional): Allows excluding clock faults from have_fault binary sensor.
-      Valid options are **NONE** and **CLOCK_FAULT**. Default is **CLOCK_FAULT** which excludes clock faults from have_fault binary sensor.
-      Excluding clock faults by default is implemented since a clock fault is essentially a warning about unexpected behavior of I2S clock and
+    - **exclude:** (optional): Allows excluding defined faults from have_fault binary sensor.
+      Valid options are **NONE** and **CLOCK_FAULT**. Default is **CLOCK_FAULT** which excludes clock faults from **have_fault** binary sensor. To include all faults, specify **exclude: NONE** under **have_fault:**.
+      Excluding clock faults by default is implemented since clock fault is essentially a warning about unexpected behavior of the I2S clock.
       Esphome mediaplayers generate clock faults because the I2S is manipulated to control music timing.
 
 **over_temp_warning:**
