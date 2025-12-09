@@ -186,6 +186,7 @@ audio_dac:
     mixer_mode: STEREO
     volume_max: 0dB
     volume_min: -60db
+    ignore_fault: CLOCK_FAULT
     update_interval: 1s
 ```
 Configuration variables:
@@ -204,10 +205,10 @@ Configuration variables:
 - **volume_min:** (*Optional*): whole dB values from -103dB to 24dB. Defaults to -103dB.
 
 - **ignore_fault:** (*Optional*): allows ignoring of clock faults from triggering the clearing of the TAS5805M fault registers.
-  Valid options are **CLOCK_FAULT** and **NONE**. Default is **CLOCK_FAULT**, that is, to ignore clock faults when determining if TAS5805M fault registers require clearing.
+  Valid options are **CLOCK_FAULT** and **NONE**. Default is **CLOCK_FAULT**, that is, to ignore clock faults when determining if TAS5805M fault registers require clearing. To trigger clearing of fault registers on any fault, specify **ignore_fault: NONE**.
 
 - **update_interval:** (*Optional*): defines the interval (seconds) at which faults will be
-  checked and then if detected clearing of the TAS5805M fault registers at next interval. Defaults to 1s.
+  checked and then if detected clearing of the TAS5805M fault registers will occur at next interval. Defaults to 1s.
   **Note:** update interval cannot be reduced below 1s.
 
 - **refresh_eq:** (*Optional*): valid values BY_GAIN or BY_SWITCH. Defaults to BY_GAIN.
@@ -328,8 +329,8 @@ one binary sensor **have_fault:** is configured.
     Configuration variables:
     - **exclude:** (optional): Allows excluding defined faults from have_fault binary sensor.
       Valid options are **NONE** and **CLOCK_FAULT**. Default is **CLOCK_FAULT** which excludes clock faults from **have_fault** binary sensor. To include all faults, specify **exclude: NONE**.
-      Excluding clock faults by default is implemented since clock fault is essentially a warning about unexpected behavior of the I2S clock and
-      Esphome mediaplayers generate clock faults because the I2S is manipulated to control music timing.
+      Excluding clock faults by default is implemented since a clock fault is essentially a warning about unexpected behavior of the I2S clock and
+      Esphome mediaplayers generate clock faults because I2S is manipulated to control music timing.
 
 **over_temp_warning:**
   - To attempt to mitigate an over temperature upon receiving a over temperature, the volume can be decreased using **interval:**
