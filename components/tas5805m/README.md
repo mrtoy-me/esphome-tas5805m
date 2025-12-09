@@ -203,8 +203,8 @@ Configuration variables:
 
 - **volume_min:** (*Optional*): whole dB values from -103dB to 24dB. Defaults to -103dB.
 
-- **ignore_fault:** (*Optional*): allows ignoring of clock faults from triggering clearing of the TAS5805M fault registers.
-  Valid options are **CLOCK_FAULT** and **NONE**. Default is **CLOCK_FAULT**, that is, to ignore clock faults.
+- **ignore_fault:** (*Optional*): allows ignoring of clock faults from triggering the clearing of the TAS5805M fault registers.
+  Valid options are **CLOCK_FAULT** and **NONE**. Default is **CLOCK_FAULT**, that is, to ignore clock faults when determining if TAS5805M fault registers require clearing.
 
 - **update_interval:** (*Optional*): defines the interval (seconds) at which faults will be
   checked and then if detected clearing of the TAS5805M fault registers at next interval. Defaults to 1s.
@@ -327,8 +327,8 @@ one binary sensor **have_fault:** is configured.
 
     Configuration variables:
     - **exclude:** (optional): Allows excluding defined faults from have_fault binary sensor.
-      Valid options are **NONE** and **CLOCK_FAULT**. Default is **CLOCK_FAULT** which excludes clock faults from **have_fault** binary sensor. To include all faults, specify **exclude: NONE** under **have_fault:**.
-      Excluding clock faults by default is implemented since clock fault is essentially a warning about unexpected behavior of the I2S clock.
+      Valid options are **NONE** and **CLOCK_FAULT**. Default is **CLOCK_FAULT** which excludes clock faults from **have_fault** binary sensor. To include all faults, specify **exclude: NONE**.
+      Excluding clock faults by default is implemented since clock fault is essentially a warning about unexpected behavior of the I2S clock and
       Esphome mediaplayers generate clock faults because the I2S is manipulated to control music timing.
 
 **over_temp_warning:**
