@@ -175,7 +175,7 @@ switch:
 
 ## Audio Dac
 
-Example typical configuration:
+Example configuration:
 ```
 audio_dac:
   - platform: tas5805m
