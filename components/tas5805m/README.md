@@ -329,8 +329,7 @@ one binary sensor **have_fault:** is configured.
     Configuration variables:
     - **exclude:** (optional): Allows excluding defined faults from have_fault binary sensor.
       Valid options are **NONE** and **CLOCK_FAULT**. Default is **CLOCK_FAULT** which excludes clock faults from **have_fault** binary sensor. To include all faults, specify **exclude: NONE**.
-      Excluding clock faults by default is implemented since a clock fault is essentially a warning about unexpected behavior of the I2S clock and
-      Esphome mediaplayers generate clock faults because I2S is manipulated to control music timing.
+      Excluding clock faults by default is implemented since a clock fault is essentially a warning about unexpected behavior of the I2S clock and Esphome idf mediaplayers generate clock faults because I2S is manipulated to guarentee timing.
 
 **over_temp_warning:**
   - To attempt to mitigate an over temperature upon receiving a over temperature, the volume can be decreased using **interval:**
