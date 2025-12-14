@@ -23,10 +23,10 @@ CONF_OVER_TEMP_WARNING = "over_temp_warning"
 
 from .audio_dac import CONF_TAS5805M_ID, tas5805m_ns, Tas5805mComponent
 
-ExcludeFromHaveFault = tas5805m_ns.enum("ExcludeFromHaveFault")
-EXCLUDE_FROM_HAVE_FAULT = {
-     "NONE"        : ExcludeFromHaveFault.NONE,
-     "CLOCK_FAULT" : ExcludeFromHaveFault.CLOCK_FAULT,
+ExcludeIgnoreModes = tas5805m_ns.enum("ExcludeIgnoreModes")
+EXCLUDE_IGNORE_MODES = {
+     "NONE"        : ExcludeIgnoreModes.NONE,
+     "CLOCK_FAULT" : ExcludeIgnoreModes.CLOCK_FAULT,
 }
 
 CONFIG_SCHEMA = {
@@ -37,8 +37,8 @@ CONFIG_SCHEMA = {
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ).extend(
         {
-            cv.Optional(CONF_EXCLUDE, default="NONE"): cv.enum(
-                        EXCLUDE_FROM_HAVE_FAULT, upper=True),
+            cv.Optional(CONF_EXCLUDE, default="CLOCK_FAULT"): cv.enum(
+                        EXCLUDE_IGNORE_MODES, upper=True),
         }
     ),
 

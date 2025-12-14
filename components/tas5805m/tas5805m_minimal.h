@@ -5,7 +5,7 @@
 namespace esphome {
 namespace tas5805m {
 
-static const Tas5805mConfiguration tas5805m_registers[] = {
+static const Tas5805mConfiguration TAS5805M_REGISTERS[] = {
 // RESET
     { 0x00, 0x00 },
     { 0x7f, 0x00 },

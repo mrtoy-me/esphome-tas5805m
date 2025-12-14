@@ -31,11 +31,16 @@ namespace tas5805m {
   }__attribute__((packed));
 
   struct Tas5805mFault {
-    uint8_t channel_fault;
-    uint8_t global_fault;
-    bool clock_fault;
-    bool temperature_fault;
-    bool temperature_warning;
+    uint8_t channel_fault{0};                  // individual faults extracted when publishing
+    uint8_t global_fault{0};                   // individual faults extracted when publishing
+
+    bool have_fault_except_clock_fault{false}; // internal use
+
+    bool have_fault{false};                    // any fault found but does not include clock fault if it is excluded
+
+    bool clock_fault{false};
+    bool temperature_fault{false};
+    bool temperature_warning{false};
   };
 
 // Startup sequence codes
