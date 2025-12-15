@@ -200,23 +200,20 @@ Configuration variables:
 - **mixer_mode:** (*Optional*): values STEREO, INVERSE_STEREO, MONO, LEFT or RIGHT
   Defaults to STEREO. Note: for PBTL Dac Mode, only MONO, LEFT or RIGHT are valid.
 
+- **ignore_fault:** (*Optional*): allows ignoring of clock faults from triggering the clearing of the  TAS5805M fault registers.
+  Valid options are **CLOCK_FAULT** and **NONE**. Default is **CLOCK_FAULT**, that is, to ignore clock faults when determining if TAS5805M fault registers require clearing. To trigger clearing of fault registers on any fault, specify **ignore_fault: NONE**
+
+- **refresh_eq:** (*Optional*): valid values **BY_GAIN** or **BY_SWITCH**. Defaults to **BY_GAIN**.
+  This setting is not required if you are using Speaker Mediaplayer component ie default used. It is intended when Snapcast client component is used instead of Speaker Mediaplayer. When a Snapcast client component is
+  configured, the BY_SWITCH value should be used. See information under
+  "Activation of Mixer mode and EQ Gains" section above and provided YAML examples.
+
 - **volume_max:** (*Optional*): whole dB values from -103dB to 24dB. Defaults to 24dB.
 
 - **volume_min:** (*Optional*): whole dB values from -103dB to 24dB. Defaults to -103dB.
 
-- **ignore_fault:** (*Optional*): allows ignoring of clock faults from triggering the clearing of the TAS5805M fault registers.
-  Valid options are **CLOCK_FAULT** and **NONE**. Default is **CLOCK_FAULT**, that is, to ignore clock faults when determining if TAS5805M fault registers require clearing. To trigger clearing of fault registers on any fault, specify **ignore_fault: NONE**.
-
 - **update_interval:** (*Optional*): defines the interval (seconds) at which faults will be
-  checked and then if detected clearing of the TAS5805M fault registers will occur at next interval. Defaults to 1s.
-  **Note:** update interval cannot be reduced below 1s.
-
-- **refresh_eq:** (*Optional*): valid values BY_GAIN or BY_SWITCH. Defaults to BY_GAIN.
-  This setting can normally be ignored and omitted if you are using Speaker
-  Mediaplayer component and is intended for use when Snapcast client component
-  is used instead of Speaker Mediaplayer. When a Snapcast client component is
-  configured, the BY_SWITCH value should be used. See information under
-  "Activation of Mixer mode and EQ Gains" section above and provided YAML examples.
+  checked and then if detected, the clearing of the TAS5805M fault registers will occur at next interval. Defaults to 1s. **Note:** update interval cannot be reduced below 1s.
 
 
 ## Switches
