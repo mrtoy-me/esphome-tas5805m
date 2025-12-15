@@ -4,8 +4,7 @@
 #include "esphome/components/switch/switch.h"
 #include "esphome/core/component.h"
 
-namespace esphome {
-namespace tas5805m {
+namespace esphome::tas5805m {
 
 class EnableEqSwitch : public switch_::Switch, public Component, public Parented<Tas5805mComponent> {
 public:
@@ -19,5 +18,4 @@ protected:
   bool trigger_refresh_settings_{false};
 };
 
-}  // namespace tas5805m
-}  // namespace esphome
+}  // namespace esphome::tas5805m

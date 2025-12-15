@@ -4,8 +4,7 @@
 #include "esphome/core/helpers.h"
 #include "esphome/core/hal.h"
 
-namespace esphome {
-namespace tas5805m {
+namespace esphome::tas5805m {
 
 static const char *const TAG               = "tas5805m";
 static const char *const ERROR             = "Error ";
@@ -288,18 +287,21 @@ void Tas5805mComponent::dump_config() {
       LOG_PIN("  Enable Pin: ", this->enable_pin_);
       LOG_I2C_DEVICE(this);
       ESP_LOGCONFIG(TAG,
-              "  Registers configured: %i\n"
-              "  DAC mode: %s\n"
-              "  Mixer mode: %s\n"
+              "  Registers Configured: %i\n"
               "  Analog Gain: %3.1fdB\n"
-              "  Maximum Volume: %idB\n"
-              "  Minimum Volume: %idB\n",
-              this->number_registers_configured_, this->tas5805m_dac_mode_ ? "PBTL" : "BTL",
-              MIXER_MODE_TEXT[this->tas5805m_mixer_mode_], this->tas5805m_analog_gain_,
-              this->tas5805m_volume_max_, this->tas5805m_volume_min_);
-      if (this->ignore_clock_faults_when_clearing_faults_) {
-        ESP_LOGCONFIG(TAG,  "  Ignore Fault: CLOCK FAULTS");
-      }
+              "  DAC Mode: %s\n"
+              "  Mixer Mode: %s\n"
+              "  Volume Maximum: %idB\n"
+              "  Volume Minimum: %idB\n"
+              "  Ignore Fault: %s\n"
+              "  Refresh EQ: %s\n",
+              this->number_registers_configured_, this->tas5805m_analog_gain_,
+              this->tas5805m_dac_mode_ ? "PBTL" : "BTL",
+              MIXER_MODE_TEXT[this->tas5805m_mixer_mode_],
+              this->tas5805m_volume_max_, this->tas5805m_volume_min_,
+              this->ignore_clock_faults_when_clearing_faults_ ? "CLOCK FAULTS" : "NONE",
+              this->auto_refresh_ ? "BY SWITCH" : "BY GAIN")
+              );
       LOG_UPDATE_INTERVAL(this);
       break;
   }
@@ -307,9 +309,8 @@ void Tas5805mComponent::dump_config() {
   #ifdef USE_TAS5805M_BINARY_SENSOR
   ESP_LOGCONFIG(TAG, "Tas5805m Binary Sensors:");
   LOG_BINARY_SENSOR("  ", "Any Faults", this->have_fault_binary_sensor_);
-  if (this->exclude_clock_fault_from_have_faults_) {
-    ESP_LOGCONFIG(TAG, "    Exclude: CLOCK FAULTS");
-  }
+  ESP_LOGCONFIG(TAG, "    Exclude: %s", this->exclude_clock_fault_from_have_faults_ ? "CLOCK FAULTS" : "NONE");
+
   LOG_BINARY_SENSOR("  ", "Right Channel Over Current", this->right_channel_over_current_fault_binary_sensor_);
   LOG_BINARY_SENSOR("  ", "Left Channel Over Current", this->left_channel_over_current_fault_binary_sensor_);
   LOG_BINARY_SENSOR("  ", "Right Channel DC Fault", this->right_channel_dc_fault_binary_sensor_);
@@ -439,12 +440,12 @@ uint32_t Tas5805mComponent::times_faults_cleared() {
 
 // used by 'eq_gain_band16000hz' to determine if it should 'refresh_settings()'
 bool Tas5805mComponent::use_eq_gain_refresh() {
-  return (this->auto_refresh_ == BY_GAIN);
+  return (this->auto_refresh_ == AutoRefreshMode::BY_GAIN);
 }
 
 // used by 'enable_eq_switch' to determine if it should 'refresh_settings()'
 bool Tas5805mComponent::use_eq_switch_refresh() {
-  return (this->auto_refresh_ == BY_SWITCH);
+  return (this->auto_refresh_ == AutoRefreshMode::BY_SWITCH);
 }
 
 float Tas5805mComponent::volume() {
@@ -815,5 +816,4 @@ bool Tas5805mComponent::tas5805m_write_bytes_(uint8_t a_register, uint8_t* data,
   return true;
 }
 
-}  // namespace tas5805m
-}  // namespace esphome
+}  // namespace esphome::tas5805m

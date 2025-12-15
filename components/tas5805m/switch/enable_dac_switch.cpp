@@ -1,8 +1,7 @@
 #include "enable_dac_switch.h"
 #include "esphome/core/log.h"
 
-namespace esphome {
-namespace tas5805m {
+namespace esphome::tas5805m {
 
 static const char *const TAG = "tas5805m.switch";
 
@@ -22,5 +21,4 @@ void EnableDacSwitch::write_state(bool state) {
   this->parent_->enable_dac(state);
 }
 
-}  // namespace tas5805m
-}  // namespace esphome
+}  // namespace esphome::tas5805m

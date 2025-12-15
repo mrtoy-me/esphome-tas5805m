@@ -2,8 +2,7 @@
 
 #include "tas5805m.h"
 
-namespace esphome {
-namespace tas5805m {
+namespace esphome::tas5805m {
 
 static const Tas5805mConfiguration TAS5805M_REGISTERS[] = {
 // RESET
@@ -27,13 +26,11 @@ static const Tas5805mConfiguration TAS5805M_REGISTERS[] = {
     { 0x7f, 0x00 },
     { 0x02, 0x00 },
     { 0x30, 0x00 },
-    { 0x4c, 0x30 }, 
+    { 0x4c, 0x30 },
     { 0x53, 0x00 },
     { 0x54, 0x1F }, //   originally 0x00 @mrtoy-me changed to analog gain -15.5db (31 decimal) to suit 5 volt supply voltage
     { 0x03, 0x03 },
     { 0x78, 0x80 },
 };
 
-
-} // namespace tas5805m
-} // namespace esphome
+}  // namespace esphome::tas5805m

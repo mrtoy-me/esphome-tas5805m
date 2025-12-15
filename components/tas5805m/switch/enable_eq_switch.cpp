@@ -1,8 +1,7 @@
 #include "enable_eq_switch.h"
 #include "esphome/core/log.h"
 
-namespace esphome {
-namespace tas5805m {
+namespace esphome::tas5805m {
 
 static const char *const TAG = "tas5805m.switch";
 
@@ -46,5 +45,4 @@ void EnableEqSwitch::write_state(bool state) {
   }
 }
 
-}  // namespace tas5805m
-}  // namespace esphome
+}  // namespace esphome::tas5805m
