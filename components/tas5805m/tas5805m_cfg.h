@@ -1,7 +1,6 @@
 #pragma once
 
-namespace esphome {
-namespace tas5805m {
+namespace esphome::tas5805m {
 
   enum ControlState : uint8_t {
     CTRL_DEEP_SLEEP = 0x00, // Deep Sleep
@@ -95,5 +94,4 @@ static const uint32_t TAS5805M_MIXER_VALUE_0DB         = 0x00008000;
 //static const uint32_t TAS5805M_MIXER_VALUE_MINUS6DB    = 0xE7264000;
 static const uint32_t TAS5805M_MIXER_VALUE_MINUS6DB    = 0x00004000;
 
-} // namespace tas5805m
-} // namespace esphome
+}  // namespace esphome::tas5805m

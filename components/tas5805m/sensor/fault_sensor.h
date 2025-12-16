@@ -4,8 +4,7 @@
 #include "esphome/core/component.h"
 #include "../tas5805m.h"
 
-namespace esphome {
-namespace tas5805m {
+namespace esphome::tas5805m {
 
 class FaultSensor : public PollingComponent, public Parented<Tas5805mComponent> {
  public:
@@ -22,5 +21,4 @@ class FaultSensor : public PollingComponent, public Parented<Tas5805mComponent> 
   uint32_t last_faults_cleared_{100000};
 };
 
-}  // namespace tas5805m
-}  // namespace esphome
+}  // namespace esphome::tas5805m

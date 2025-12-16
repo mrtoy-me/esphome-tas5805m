@@ -4,8 +4,7 @@
 #include "esphome/components/switch/switch.h"
 #include "esphome/core/component.h"
 
-namespace esphome {
-namespace tas5805m {
+namespace esphome::tas5805m {
 
 class EnableDacSwitch : public switch_::Switch, public Component, public Parented<Tas5805mComponent> {
 public:
@@ -18,5 +17,4 @@ protected:
   void write_state(bool state) override;
 };
 
-}  // namespace tas5805m
-}  // namespace esphome
+}  // namespace esphome::tas5805m

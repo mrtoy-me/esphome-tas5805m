@@ -144,11 +144,13 @@ Configuration required to be included under **esphome:** YAML:
 on_boot:
     priority: 220.0
     then:
-      media_player.speaker.play_on_device_media_file: startup_sync_sound
+      media_player.play_media:
+        id: external_media_player # speaker media player id
+        media_url: file://startup_sync_sound
 ```
 The **audio_dac:** has an optional configuration variable called **refresh_eq:**
 The default configuration of **refresh_eq: BY_GAIN** matches the above use case and
-therefore is not required(can be omitted) from the **audio_dac:** YAML configuration.
+therefore can be omitted from the **audio_dac:** YAML configuration.
 
 ## Use Case where Speaker Mediaplayer is not used (eg using a SnapCast client component)
 Another use case, is use of Snapcast client component instead of Speaker Mediaplayer component
@@ -204,19 +206,14 @@ Configuration variables:
 
 - **volume_min:** (*Optional*): whole dB values from -103dB to 24dB. Defaults to -103dB.
 
-- **ignore_fault:** (*Optional*): allows ignoring of clock faults from triggering the clearing of the TAS5805M fault registers.
-  Valid options are **CLOCK_FAULT** and **NONE**. Default is **CLOCK_FAULT**, that is, to ignore clock faults when determining if TAS5805M fault registers require clearing. To trigger clearing of fault registers on any fault, specify **ignore_fault: NONE**.
+- **ignore_fault:** (*Optional*): Valid options are **CLOCK_FAULT** and **NONE**. Default is **CLOCK_FAULT**.
+  That is, by default clock faults are ignored when determining if TAS5805M fault registers require clearing. To trigger clearing of fault registers on any fault condition, specify **ignore_fault: NONE**
+
+- **refresh_eq:** (*Optional*): valid values **BY_GAIN** or **BY_SWITCH**. Default is **BY_GAIN**.
+  This setting is not required if you are using Speaker Mediaplayer component as the default matches this use case. The setting is mainly intended when the Snapcast client component is used instead of Speaker Mediaplayer. When a Snapcast client component is configured, the BY_SWITCH setting should be used. See information under "Activation of Mixer mode and EQ Gains" section above and the provided YAML examples.
 
 - **update_interval:** (*Optional*): defines the interval (seconds) at which faults will be
-  checked and then if detected clearing of the TAS5805M fault registers will occur at next interval. Defaults to 1s.
-  **Note:** update interval cannot be reduced below 1s.
-
-- **refresh_eq:** (*Optional*): valid values BY_GAIN or BY_SWITCH. Defaults to BY_GAIN.
-  This setting can normally be ignored and omitted if you are using Speaker
-  Mediaplayer component and is intended for use when Snapcast client component
-  is used instead of Speaker Mediaplayer. When a Snapcast client component is
-  configured, the BY_SWITCH value should be used. See information under
-  "Activation of Mixer mode and EQ Gains" section above and provided YAML examples.
+  checked and then if detected, the clearing of the TAS5805M fault registers will occur at next interval. Defaults to 1s. **Note:** update interval cannot be reduced below 1s.
 
 
 ## Switches
@@ -234,7 +231,7 @@ for the defined time and when music player activity is detected (by mediaplayer)
 the Enable Louder Switch is triggered On. The example interval configuration also
 requires configuration of **mediaplayer:** which is also shown in the YAML examples.
 
-Configuration of Tas5805m Switches in typical use case:
+Configuration of tas5805m platform Switches in typical use case:
 
 ```switch:
   - platform: tas5805m
@@ -266,13 +263,13 @@ Configuration headers:
 
 ## EQ Band Gain Numbers
 15 EQ Band Gain Numbers can be configured for controlling the gain of each EQ Band
-in Homeassistant. The number configuration heading for each number is shown below
-with an example name configured. Defining **number: -platform: tas5805m** requires
+in Home Assistant. The number configuration heading for each number is shown below
+with an example name. Defining **number: -platform: tas5805m** requires
 all 15 EQ Gain Band headings to be configured. For TAS5805M EQ Band Gains to
 configure correctly requires some addition YAML configuration, refer to the
-"Activation of Mixer mode and EQ Gains" section above and provided YAML examples.
+"Activation of Mixer mode and EQ Gains" section above and the provided YAML examples.
 
-Example configuration of Tas5805m Band Gain Numbers:
+Example configuration of tas5805m platform (Band Gain) Numbers:
 ```
 number:
   - platform: tas5805m
@@ -337,7 +334,7 @@ one binary sensor **have_fault:** is configured.
     should have a benficial effect, but also depends on the update interval for checking faults.
     **Note:** all binary sensors are updated at the **update interval:** defined under **audio_dac:**
 
-Example configuration of Tas5805m Binary Sensors:
+Example configuration of tas5805m platform Binary Sensors:
 ```
 binary_sensor:
   - platform: tas5805m
@@ -370,9 +367,7 @@ binary_sensor:
 ```
 
 ## Sensor
-Under the tas5805m sensor platform, one sensor under configuration heading
-**faults_cleared:** can be optionally configured. This sensor counts the
-number of times a fault was detected and subsequently cleared by the component.
+One tas5805m platform sensor can be defined configuration heading **faults_cleared:** can be optionally configured. This sensor counts the number of times a fault was detected and subsequently cleared by the component.
 ```
 sensor:
   - platform: tas5805m
@@ -380,8 +375,7 @@ sensor:
       name: "Times Faults Cleared"
 ```
 Configuration variables:
-- **update interval:** (*Optional*): The interval at which the sensor is updated.
-  Defaults to 60s
+- **update interval:** (*Optional*): The interval at which the sensor is updated. Defaults to 60s.
 
 
 # YAML examples in this Repository

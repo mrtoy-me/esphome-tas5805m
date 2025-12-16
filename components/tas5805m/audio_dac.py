@@ -36,10 +36,10 @@ DAC_MODES = {
     "PBTL": DacMode.PBTL,
 }
 
-ExcludeIgnoreModes = tas5805m_ns.enum("ExcludeIgnoreModes")
+ExcludeIgnoreMode = tas5805m_ns.enum("ExcludeIgnoreModes")
 EXCLUDE_IGNORE_MODES = {
-     "NONE"        : ExcludeIgnoreModes.NONE,
-     "CLOCK_FAULT" : ExcludeIgnoreModes.CLOCK_FAULT,
+     "NONE"        : ExcludeIgnoreMode.NONE,
+     "CLOCK_FAULT" : ExcludeIgnoreMode.CLOCK_FAULT,
 }
 MixerMode = tas5805m_ns.enum("MixerMode")
 MIXER_MODES = {

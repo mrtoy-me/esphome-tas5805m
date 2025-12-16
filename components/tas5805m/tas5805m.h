@@ -14,15 +14,14 @@
 #include "esphome/components/binary_sensor/binary_sensor.h"
 #endif
 
-namespace esphome {
-namespace tas5805m {
+namespace esphome::tas5805m {
 
 enum AutoRefreshMode : uint8_t {
     BY_GAIN   = 0,
     BY_SWITCH = 1,
 };
 
-enum ExcludeIgnoreModes : uint8_t {
+enum ExcludeIgnoreMode : uint8_t {
     NONE        = 0,
     CLOCK_FAULT = 1,
 };
@@ -46,8 +45,8 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
 
   void config_dac_mode(DacMode dac_mode) {this->tas5805m_dac_mode_ = dac_mode; }
 
-  void config_ignore_fault_mode(ExcludeIgnoreModes ignore_fault_mode) {
-    this->ignore_clock_faults_when_clearing_faults_ = (ignore_fault_mode == ExcludeIgnoreModes::CLOCK_FAULT);
+  void config_ignore_fault_mode(ExcludeIgnoreMode ignore_fault_mode) {
+    this->ignore_clock_faults_when_clearing_faults_ = (ignore_fault_mode == ExcludeIgnoreMode::CLOCK_FAULT);
   }
 
   void config_mixer_mode(MixerMode mixer_mode) {this->tas5805m_mixer_mode_ = mixer_mode; }
@@ -73,8 +72,8 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
   SUB_BINARY_SENSOR(over_temperature_shutdown_fault)
   SUB_BINARY_SENSOR(over_temperature_warning)
 
-  void config_exclude_fault(ExcludeIgnoreModes exclude_fault) {
-    this->exclude_clock_fault_from_have_faults_ = (exclude_fault == ExcludeIgnoreModes::CLOCK_FAULT);
+  void config_exclude_fault(ExcludeIgnoreMode exclude_fault) {
+    this->exclude_clock_fault_from_have_faults_ = (exclude_fault == ExcludeIgnoreMode::CLOCK_FAULT);
   }
   #endif
 
@@ -153,7 +152,7 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
    } error_code_{NONE};
 
    // configured by YAML
-   AutoRefreshMode auto_refresh_;  // default = 'BY_GAIN'
+   AutoRefreshMode auto_refresh_;  // default 'BY_GAIN' = 0
 
    #ifdef USE_TAS5805M_BINARY_SENSOR
    bool exclude_clock_fault_from_have_faults_; // default = false
@@ -238,5 +237,4 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
    uint32_t start_time_;
 };
 
-}  // namespace tas5805m
-}  // namespace esphome
+}  // namespace esphome::tas5805m

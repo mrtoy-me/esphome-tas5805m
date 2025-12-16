@@ -1,8 +1,7 @@
 #include "esphome/core/log.h"
 #include "fault_sensor.h"
 
-namespace esphome {
-namespace tas5805m {
+namespace esphome::tas5805m {
 
 static const char *const TAG = "tas5805m.sensor";
 
@@ -23,5 +22,4 @@ void  FaultSensor::update() {
   }
 }
 
-}  // namespace tas5805m
-}  // namespace esphome
+}  // namespace esphome::tas5805m

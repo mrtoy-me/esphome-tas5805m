@@ -1,7 +1,6 @@
 #pragma once
 
-namespace esphome {
-namespace tas5805m {
+namespace esphome::tas5805m {
 
   enum EqBandIndices : uint8_t {
     BAND_20HZ   = 0,
@@ -1534,6 +1533,4 @@ namespace tas5805m {
 	  TAS5805M_EQ_REGISTERS_PF,
   };
 
-
-} // namespace tas5805m
-} // namespace esphome
+}  // namespace esphome::tas5805m

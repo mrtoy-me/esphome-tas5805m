@@ -5,8 +5,7 @@
 #include "esphome/core/preferences.h"
 #include "../tas5805m.h"
 
-namespace esphome {
-namespace tas5805m {
+namespace esphome::tas5805m {
 
 class EqGainBand315hz : public number::Number, public Component, public Parented<Tas5805mComponent> {
  public:
@@ -20,5 +19,4 @@ class EqGainBand315hz : public number::Number, public Component, public Parented
   ESPPreferenceObject pref_;
 };
 
-}  // namespace tas5805m
-}  // namespace esphome
+}  // namespace esphome::tas5805m
