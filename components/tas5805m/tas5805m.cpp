@@ -300,7 +300,7 @@ void Tas5805mComponent::dump_config() {
               MIXER_MODE_TEXT[this->tas5805m_mixer_mode_],
               this->tas5805m_volume_max_, this->tas5805m_volume_min_,
               this->ignore_clock_faults_when_clearing_faults_ ? "CLOCK FAULTS" : "NONE",
-              this->auto_refresh_ ? "BY SWITCH" : "BY GAIN")
+              this->auto_refresh_ ? "BY SWITCH" : "BY GAIN"
               );
       LOG_UPDATE_INTERVAL(this);
       break;
