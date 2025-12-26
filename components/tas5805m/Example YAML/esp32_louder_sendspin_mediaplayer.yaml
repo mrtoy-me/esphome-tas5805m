@@ -95,8 +95,8 @@ external_components:
     refresh: 0s
 
   - source: github://pr#12429
-    refresh: 0s
     components: [file, http_request, media_source, speaker_source]
+    refresh: 0s
 
 i2c:
   sda: GPIO21
