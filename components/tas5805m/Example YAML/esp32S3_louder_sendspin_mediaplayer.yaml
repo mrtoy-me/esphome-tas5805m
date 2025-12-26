@@ -76,48 +76,27 @@ external_components:
     components: [ tas5805m ]
     refresh: 0s
 
-  # Copied from https://github.com/esphome/home-assistant-voice-pe-alpha/blob/alpha/home-assistant-voice.yaml
-  # NOTE these external sources are work in progress and the "ref" will change as the development process progresses
-  - source:
-      # https://github.com/esphome/esphome/pull/12253
-      type: git
-      url: https://github.com/esphome/esphome
-      ref: 0fe230114c80b6d3378f04c777baadee178e40ad
+  - source: github://pr#12253
     components: [mixer]
     refresh: 0s
-  - source:
-      # https://github.com/esphome/esphome/pull/12254
-      type: git
-      url: https://github.com/esphome/esphome
-      ref: 1ab4b990092ae063a16cb1511a188c536fdb336e
+
+  - source: github://pr#12254
     components: [resampler]
     refresh: 0s
-  - source:
-      # https://github.com/esphome/esphome/pull/12256
-      type: git
-      url: https://github.com/esphome/esphome
-      ref: 047ba60f01af84513f8d5aabaa2a53074facee8f
+
+  - source: github://pr#12256
     components: [audio]
     refresh: 0s
-  - source:
-      # https://github.com/esphome/esphome/pull/12258
-      type: git
-      url: https://github.com/esphome/esphome
-      ref: bff22983a390352360796f8e1363127e0cd1f898
+
+  - source: github://pr#12258
     components: [media_player]
     refresh: 0s
-  - source:
-      # https://github.com/esphome/esphome/pull/12284
-      type: git
-      url: https://github.com/esphome/esphome
-      ref: cc238563f3fd37111e1b75bb3fba3498176445a2
+
+  - source: github://pr#12284
     components: [mdns, sendspin]
     refresh: 0s
-  - source:
-      # https://github.com/esphome/esphome/pull/12429
-      type: git
-      url: https://github.com/esphome/esphome
-      ref: 72499eaed2ed54316aca90d368053aa2e1a54f5f
+
+  - source: github://pr#12429
     refresh: 0s
     components: [file, http_request, media_source, speaker_source]
 
