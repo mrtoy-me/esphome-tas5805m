@@ -1,6 +1,6 @@
 esphome:
-  name: louder-s3
-  friendly_name: Louder-S3
+  name: louder-rover
+  friendly_name: Louder Rover
   min_version: 2025.12.0
   platformio_options:
     board_build.flash_mode: dio
@@ -10,23 +10,19 @@ esphome:
       media_player.speaker.play_on_device_media_file: startup_sync_sound
 
 esp32:
-  variant: ESP32S3
-  flash_size: 16MB
+  variant: esp32
+  flash_size: 8MB
   cpu_frequency: 240MHz
   framework:
     type: esp-idf
     version: recommended
     sdkconfig_options:
-      CONFIG_ESP32S3_DATA_CACHE_64KB: "y"
-      CONFIG_ESP32S3_DATA_CACHE_LINE_64B: "y"
-      CONFIG_ESP32S3_INSTRUCTION_CACHE_32KB: "y"
-
       # Optional for ESP32-Louder used by Voice-PE
       # Moves instructions and read only data from flash into PSRAM on boot.
       # Both enabled allows instructions to execute while a flash operation is in progress without needing to be placed in IRAM.
       # Considerably speeds up mWW at the cost of using more PSRAM.
-      CONFIG_SPIRAM_RODATA: "y"
-      CONFIG_SPIRAM_FETCH_INSTRUCTIONS: "y"
+      # CONFIG_SPIRAM_RODATA: "y"
+      # CONFIG_SPIRAM_FETCH_INSTRUCTIONS: "y"
 
       CONFIG_BT_ALLOCATION_FROM_SPIRAM_FIRST: "y"
       CONFIG_BT_BLE_DYNAMIC_ENV_MEMORY: "y"
@@ -34,18 +30,19 @@ esp32:
       CONFIG_MBEDTLS_EXTERNAL_MEM_ALLOC: "y"
       CONFIG_MBEDTLS_SSL_PROTO_TLS1_3: "y"  # TLS1.3 support isn't enabled by default in IDF 5.1.5
 
+
 # Enable logging
 logger:
   level: DEBUG
+  logs:
+    number: INFO
 
 # Enable Home Assistant API
 api:
-  encryption:
-    key: "xxxx"
 
 ota:
   - platform: esphome
-    password: "xxxx"
+    # password: !secret esphome_ota_password
 
 wifi:
   ssid: !secret wifi_ssid
@@ -59,7 +56,6 @@ globals:
     initial_value: 'false'
 
 psram:
-  mode: octal
   speed: 80MHz
   ignore_not_found: false
 
@@ -69,33 +65,33 @@ external_components:
     refresh: 0s
 
 i2c:
-  sda: GPIO8
-  scl: GPIO9
+  sda: GPIO21
+  scl: GPIO27
   frequency: 400kHz
   scan: True
 
 audio_dac:
   - platform: tas5805m
     id: tas5805m_dac
-    enable_pin: GPIO17
+    enable_pin: GPIO33
     dac_mode: BTL
     mixer_mode: STEREO
     analog_gain: -15.5db
-    volume_max: -5dB
-    volume_min: -60db
+    volume_max: -1dB
+    volume_min: -50db
     # by default clock faults are now ignored when determining when fault registers should be cleared
     # interval for checking fault registers and if define, updating binary sensors
     update_interval: 1s
 
 i2s_audio:
-  i2s_lrclk_pin: GPIO15
-  i2s_bclk_pin: GPIO14
+  i2s_lrclk_pin: GPIO25
+  i2s_bclk_pin: GPIO26
 
 speaker:
   - platform: i2s_audio
     id: speaker_id
     dac_type: external
-    i2s_dout_pin: GPIO16
+    i2s_dout_pin: GPIO22
     audio_dac: tas5805m_dac
     channel: stereo
     sample_rate: 48000
@@ -103,8 +99,8 @@ speaker:
 
   - platform: mixer
     id: mixer_speaker_id
-    #task_stack_in_psram: true
     output_speaker: speaker_id
+    task_stack_in_psram: true
     source_speakers:
       - id: announcement_spk_mixer_input
         timeout: never
@@ -113,27 +109,25 @@ speaker:
 
   - platform: resampler
     id: media_spk_resampling_input
-    #task_stack_in_psram: true
     output_speaker: media_spk_mixer_input
 
   - platform: resampler
     id: announcement_spk_resampling_input
-    #task_stack_in_psram: true
     output_speaker: announcement_spk_mixer_input
 
 media_player:
   - platform: speaker
     name: Mediaplayer
     id: louder_mediaplayer
-    #task_stack_in_psram: true
+    buffer_size: 100000
     volume_increment: 10%
     volume_initial: 10%
     media_pipeline:
       speaker: media_spk_resampling_input
       num_channels: 2
     announcement_pipeline:
-      speaker: announcement_spk_resampling_input
-      num_channels: 1
+       speaker: announcement_spk_resampling_input
+       num_channels: 1
 
     files:
       id: startup_sync_sound
@@ -148,42 +142,30 @@ media_player:
 
     on_announcement:
       - if:
-          # changing mediaplayer volume during announcement triggers further on_announcments
-          # so a global is used to prevent actions being re-triggered
           condition:
-            - lambda: return (!id(announcement_triggered));
+            switch.is_off: enable_louder
           then:
-            - if:
-                condition:
-                  switch.is_off: enable_louder
-                then:
-                  switch.turn_on: enable_louder
-            - lambda: |-
-                id(announcement_triggered) = true;
-                id(current_volume) = id(louder_mediaplayer).volume;
-            - mixer_speaker.apply_ducking:
-                  id: media_spk_mixer_input
-                  decibel_reduction: 40
-                  duration: 0.0s
-            - wait_until:
-                media_player.is_announcing:
-                  id: louder_mediaplayer
-            - delay: 0.75s
-            - media_player.volume_set:
-                id: louder_mediaplayer
-                volume: !lambda "return id(announce_volume).state / 100.0;"
-            - wait_until:
-                - not:
-                    media_player.is_announcing:
-                      id: louder_mediaplayer
-            - mixer_speaker.apply_ducking:
-                id: media_spk_mixer_input
-                decibel_reduction: 0
-                duration: 1.0s
-            - media_player.volume_set:
-                id: louder_mediaplayer
-                volume: !lambda "return id(current_volume);"
-            - lambda: id(announcement_triggered) = false;
+            switch.turn_on: enable_louder
+
+      - lambda: id(current_volume) = id(tas5805m_dac).volume();
+
+      - mixer_speaker.apply_ducking:
+            id: media_spk_mixer_input
+            decibel_reduction: 40
+            duration: 0.00s
+      - wait_until:
+            media_player.is_announcing:
+      - delay: 0.75s
+      - lambda: id(tas5805m_dac).set_volume(id(announce_volume).state / 100);
+
+      - wait_until:
+          not:
+            media_player.is_announcing:
+      - mixer_speaker.apply_ducking:
+            id: media_spk_mixer_input
+            decibel_reduction: 0
+            duration: 1.0s
+      - lambda: id(tas5805m_dac).set_volume(id(current_volume));
 
 switch:
   - platform: tas5805m
@@ -244,12 +226,12 @@ sensor:
   - platform: tas5805m
     faults_cleared:
       name: "Times Faults Cleared"
-    update_interval: 60s
 
 binary_sensor:
   - platform: tas5805m
-    have_fault: # by default clock faults are excluded
+    have_fault:
       name: Any Faults
+      exclude: CLOCK_FAULT
     left_channel_dc_fault:
       name: Left Channel DC Fault
     right_channel_dc_fault:
@@ -262,10 +244,10 @@ binary_sensor:
       name: CRC Check Fault
     bq_write_failed:
       name: BQ Write Failure
-# I2S clock fault binary sensor is not really useful with speaker media player
-# since it generates clock faults when it manipulates I2S.
-#   clock fault:
-#     name: I2S Clock Fault
+    # I2S clock fault binary sensor is not really useful with speaker media player
+    # since it generates clock faults when it manipulates I2S.
+    # clock fault:
+    #   name: I2S Clock Fault
     pcdd_over_voltage:
       name: PCDD Over Voltage
     pcdd_under_voltage:
