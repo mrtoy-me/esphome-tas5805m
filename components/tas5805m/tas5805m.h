@@ -132,6 +132,7 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
    // manage faults
    bool clear_fault_registers_();
    bool read_fault_registers_();
+
    #ifdef USE_TAS5805M_BINARY_SENSOR
    void publish_faults_();
    void publish_channel_faults_();
@@ -155,10 +156,10 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
    AutoRefreshMode auto_refresh_;  // default 'BY_GAIN' = 0
 
    #ifdef USE_TAS5805M_BINARY_SENSOR
-   bool exclude_clock_fault_from_have_faults_; // default = false
+   bool exclude_clock_fault_from_have_faults_; // YAML default = true
    #endif
 
-   bool ignore_clock_faults_when_clearing_faults_; // default = false
+   bool ignore_clock_faults_when_clearing_faults_; // YAML default = true
 
    DacMode tas5805m_dac_mode_;
 
@@ -182,7 +183,7 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
    uint8_t tas5805m_raw_volume_min_;
 
    // fault processing
-   bool have_fault_to_clear_{false}; // false so clear fault registers is skipped on first update
+   bool is_fault_to_clear_{false}; // false so clear fault registers is skipped on first update
 
    // has the state of any fault in group changed - used to conditionally publish binary sensors
    // true so all binary sensors are published on first update

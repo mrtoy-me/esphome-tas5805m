@@ -177,7 +177,7 @@ void Tas5805mComponent::update() {
   }
 
   // if there was a fault last update then clear any faults
-  if (this->have_fault_to_clear_) {
+  if (this->is_fault_to_clear_) {
     if (!this->clear_fault_registers_()) {
       ESP_LOGW(TAG, "%sclearing faults", ERROR);
     }
@@ -189,8 +189,8 @@ void Tas5805mComponent::update() {
   }
 
   // is there a fault that should be cleared next update
-  this->have_fault_to_clear_ =
-     ((this->tas5805m_faults_.clock_fault && (!this->ignore_clock_faults_when_clearing_faults_) ) || this->tas5805m_faults_.have_fault_except_clock_fault);
+  this->is_fault_to_clear_ =
+     ( this->tas5805m_faults_.is_fault_except_clock_fault || (this->tas5805m_faults_.clock_fault && (!this->ignore_clock_faults_when_clearing_faults_)) );
 
 
   // if no change in faults bypass publishing
@@ -750,14 +750,16 @@ bool Tas5805mComponent::read_fault_registers_() {
   this->is_new_common_fault_ = (new_fault_state != this->tas5805m_faults_.clock_fault);
   this->tas5805m_faults_.clock_fault = new_fault_state;
 
-  // process have_fault binary sensor
-  this->tas5805m_faults_.have_fault_except_clock_fault =
+  this->tas5805m_faults_.is_fault_except_clock_fault =
     ( this->tas5805m_faults_.channel_fault || this->tas5805m_faults_.global_fault ||
       this->tas5805m_faults_.temperature_fault || this->tas5805m_faults_.temperature_warning );
 
-  new_fault_state = (this->tas5805m_faults_.have_fault_except_clock_fault || (this->tas5805m_faults_.clock_fault && (!this->exclude_clock_fault_from_have_faults_)));
+  #ifdef USE_TAS5805M_BINARY_SENSOR
+  // process have_fault binary sensor
+  new_fault_state = (this->tas5805m_faults_.is_fault_except_clock_fault || (this->tas5805m_faults_.clock_fault && (!this->exclude_clock_fault_from_have_faults_)));
   this->is_new_common_fault_ = this->is_new_common_fault_ || (new_fault_state != this->tas5805m_faults_.have_fault);
   this->tas5805m_faults_.have_fault = new_fault_state;
+  #endif
 
   return true;
 }
