@@ -177,7 +177,7 @@ void Tas5805mComponent::update() {
   }
 
   // if there was a fault last update then clear any faults
-  if (this->have_fault_to_clear_) {
+  if (this->is_fault_to_clear_) {
     if (!this->clear_fault_registers_()) {
       ESP_LOGW(TAG, "%sclearing faults", ERROR);
     }
@@ -189,8 +189,8 @@ void Tas5805mComponent::update() {
   }
 
   // is there a fault that should be cleared next update
-  this->have_fault_to_clear_ =
-     ((this->tas5805m_faults_.clock_fault && (!this->ignore_clock_faults_when_clearing_faults_) ) || this->tas5805m_faults_.have_fault_except_clock_fault);
+  this->is_fault_to_clear_ =
+     ( this->tas5805m_faults_.is_fault_except_clock_fault || (this->tas5805m_faults_.clock_fault && (!this->ignore_clock_faults_when_clearing_faults_)) );
 
 
   // if no change in faults bypass publishing
@@ -361,7 +361,7 @@ bool Tas5805mComponent::set_eq_gain(uint8_t band, int8_t gain) {
 
   // runs when 'refresh_settings_triggered_' is true
 
-  ESP_LOGD(TAG, "Set %s%d Gain: %ddB", EQ_BAND, band, gain);
+  ESP_LOGV(TAG, "Set %s%d Gain: %ddB", EQ_BAND, band, gain);
 
   uint8_t x = (gain + TAS5805M_EQ_MAX_DB);
 
@@ -401,7 +401,7 @@ bool Tas5805mComponent::set_mute_off() {
   if (!this->is_muted_) return true;
   if (!this->tas5805m_write_byte_(TAS5805M_DEVICE_CTRL_2, this->tas5805m_control_state_)) return false;
   this->is_muted_ = false;
-  ESP_LOGD(TAG, "Mute Off");
+  ESP_LOGV(TAG, "Mute Off");
   return true;
 }
 
@@ -411,7 +411,7 @@ bool Tas5805mComponent::set_mute_on() {
   if (this->is_muted_) return true;
   if (!this->tas5805m_write_byte_(TAS5805M_DEVICE_CTRL_2, this->tas5805m_control_state_ + TAS5805M_MUTE_CONTROL)) return false;
   this->is_muted_ = true;
-  ESP_LOGD(TAG, "Mute On");
+  ESP_LOGV(TAG, "Mute On");
   return true;
 }
 
@@ -463,9 +463,10 @@ bool Tas5805mComponent::set_volume(float volume) {
                                                          this->tas5805m_raw_volume_min_,
                                                          this->tas5805m_raw_volume_max_);
   if (!this->set_digital_volume_(raw_volume)) return false;
-
-  int8_t dB = -(raw_volume / 2) + 24;
-  ESP_LOGD(TAG, "Volume: %idB", dB);
+  #if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERBOSE
+    int8_t dB = -(raw_volume / 2) + 24;
+    ESP_LOGV(TAG, "Volume: %idB", dB);
+  #endif
   return true;
 }
 
@@ -541,8 +542,10 @@ bool Tas5805mComponent::set_deep_sleep_off_() {
   if (!this->tas5805m_write_byte_(TAS5805M_DEVICE_CTRL_2, new_value)) return false;
 
   this->tas5805m_control_state_ = CTRL_PLAY;                        // set Control State to play
-  ESP_LOGD(TAG, "Deep Sleep Off");
-  if (this->is_muted_) ESP_LOGD(TAG, "Mute On preserved");
+  ESP_LOGV(TAG, "Deep Sleep Off");
+  #if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERBOSE
+  if (this->is_muted_) ESP_LOGV(TAG, "Mute On preserved");
+  #endif
   return true;
 }
 
@@ -554,8 +557,10 @@ bool Tas5805mComponent::set_deep_sleep_on_() {
   if (!this->tas5805m_write_byte_(TAS5805M_DEVICE_CTRL_2, new_value)) return false;
 
   this->tas5805m_control_state_ = CTRL_DEEP_SLEEP;                   // set Control State to deep sleep
-  ESP_LOGD(TAG, "Deep Sleep On");
+  ESP_LOGV(TAG, "Deep Sleep On");
+  #if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERBOSE
   if (this->is_muted_) ESP_LOGD(TAG, "Mute On preserved");
+  #endif
   return true;
 }
 
@@ -595,7 +600,7 @@ bool Tas5805mComponent::set_eq_off_() {
   if (!this->tas5805m_eq_enabled_) return true;
   if (!this->tas5805m_write_byte_(TAS5805M_DSP_MISC, TAS5805M_CTRL_EQ_OFF)) return false;
   this->tas5805m_eq_enabled_ = false;
-  ESP_LOGD(TAG, "EQ control Off");
+  ESP_LOGV(TAG, "EQ control Off");
   #endif
   return true;
 }
@@ -605,7 +610,7 @@ bool Tas5805mComponent::set_eq_on_() {
   if (this->tas5805m_eq_enabled_) return true;
   if (!this->tas5805m_write_byte_(TAS5805M_DSP_MISC, TAS5805M_CTRL_EQ_ON)) return false;
   this->tas5805m_eq_enabled_ = true;
-  ESP_LOGD(TAG, "EQ control On");
+  ESP_LOGV(TAG, "EQ control On");
   #endif
   return true;
 }
@@ -657,7 +662,7 @@ bool Tas5805mComponent::set_mixer_mode_(MixerMode mode) {
       break;
 
     default:
-      ESP_LOGD(TAG, "Invalid %s", MIXER_MODE);
+      ESP_LOGW(TAG, "Invalid %s", MIXER_MODE);
       return false;
   }
 
@@ -750,14 +755,16 @@ bool Tas5805mComponent::read_fault_registers_() {
   this->is_new_common_fault_ = (new_fault_state != this->tas5805m_faults_.clock_fault);
   this->tas5805m_faults_.clock_fault = new_fault_state;
 
-  // process have_fault binary sensor
-  this->tas5805m_faults_.have_fault_except_clock_fault =
+  this->tas5805m_faults_.is_fault_except_clock_fault =
     ( this->tas5805m_faults_.channel_fault || this->tas5805m_faults_.global_fault ||
       this->tas5805m_faults_.temperature_fault || this->tas5805m_faults_.temperature_warning );
 
-  new_fault_state = (this->tas5805m_faults_.have_fault_except_clock_fault || (this->tas5805m_faults_.clock_fault && (!this->exclude_clock_fault_from_have_faults_)));
+  #ifdef USE_TAS5805M_BINARY_SENSOR
+  // process have_fault binary sensor
+  new_fault_state = (this->tas5805m_faults_.is_fault_except_clock_fault || (this->tas5805m_faults_.clock_fault && (!this->exclude_clock_fault_from_have_faults_)));
   this->is_new_common_fault_ = this->is_new_common_fault_ || (new_fault_state != this->tas5805m_faults_.have_fault);
   this->tas5805m_faults_.have_fault = new_fault_state;
+  #endif
 
   return true;
 }

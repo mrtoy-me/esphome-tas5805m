@@ -33,13 +33,15 @@ namespace esphome::tas5805m {
     uint8_t channel_fault{0};                  // individual faults extracted when publishing
     uint8_t global_fault{0};                   // individual faults extracted when publishing
 
-    bool have_fault_except_clock_fault{false}; // internal use
-
-    bool have_fault{false};                    // any fault found but does not include clock fault if it is excluded
-
     bool clock_fault{false};
     bool temperature_fault{false};
     bool temperature_warning{false};
+
+    bool is_fault_except_clock_fault{false};   // fault conditions combined except clock fault
+
+    #ifdef USE_TAS5805M_BINARY_SENSOR
+    bool have_fault{false};                    // combined binary sensor - any fault found but does not include clock fault if excluded
+    #endif
   };
 
 // Startup sequence codes
