@@ -361,7 +361,7 @@ bool Tas5805mComponent::set_eq_gain(uint8_t band, int8_t gain) {
 
   // runs when 'refresh_settings_triggered_' is true
 
-  ESP_LOGD(TAG, "Set %s%d Gain: %ddB", EQ_BAND, band, gain);
+  ESP_LOGV(TAG, "Set %s%d Gain: %ddB", EQ_BAND, band, gain);
 
   uint8_t x = (gain + TAS5805M_EQ_MAX_DB);
 
@@ -401,7 +401,7 @@ bool Tas5805mComponent::set_mute_off() {
   if (!this->is_muted_) return true;
   if (!this->tas5805m_write_byte_(TAS5805M_DEVICE_CTRL_2, this->tas5805m_control_state_)) return false;
   this->is_muted_ = false;
-  ESP_LOGD(TAG, "Mute Off");
+  ESP_LOGV(TAG, "Mute Off");
   return true;
 }
 
@@ -411,7 +411,7 @@ bool Tas5805mComponent::set_mute_on() {
   if (this->is_muted_) return true;
   if (!this->tas5805m_write_byte_(TAS5805M_DEVICE_CTRL_2, this->tas5805m_control_state_ + TAS5805M_MUTE_CONTROL)) return false;
   this->is_muted_ = true;
-  ESP_LOGD(TAG, "Mute On");
+  ESP_LOGV(TAG, "Mute On");
   return true;
 }
 
@@ -463,9 +463,10 @@ bool Tas5805mComponent::set_volume(float volume) {
                                                          this->tas5805m_raw_volume_min_,
                                                          this->tas5805m_raw_volume_max_);
   if (!this->set_digital_volume_(raw_volume)) return false;
-
-  int8_t dB = -(raw_volume / 2) + 24;
-  ESP_LOGD(TAG, "Volume: %idB", dB);
+  #if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERBOSE
+    int8_t dB = -(raw_volume / 2) + 24;
+    ESP_LOGV(TAG, "Volume: %idB", dB);
+  #endif
   return true;
 }
 
@@ -541,8 +542,10 @@ bool Tas5805mComponent::set_deep_sleep_off_() {
   if (!this->tas5805m_write_byte_(TAS5805M_DEVICE_CTRL_2, new_value)) return false;
 
   this->tas5805m_control_state_ = CTRL_PLAY;                        // set Control State to play
-  ESP_LOGD(TAG, "Deep Sleep Off");
-  if (this->is_muted_) ESP_LOGD(TAG, "Mute On preserved");
+  ESP_LOGV(TAG, "Deep Sleep Off");
+  #if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERBOSE
+  if (this->is_muted_) ESP_LOGV(TAG, "Mute On preserved");
+  #endif
   return true;
 }
 
@@ -554,8 +557,10 @@ bool Tas5805mComponent::set_deep_sleep_on_() {
   if (!this->tas5805m_write_byte_(TAS5805M_DEVICE_CTRL_2, new_value)) return false;
 
   this->tas5805m_control_state_ = CTRL_DEEP_SLEEP;                   // set Control State to deep sleep
-  ESP_LOGD(TAG, "Deep Sleep On");
+  ESP_LOGV(TAG, "Deep Sleep On");
+  #if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERBOSE
   if (this->is_muted_) ESP_LOGD(TAG, "Mute On preserved");
+  #endif
   return true;
 }
 
@@ -595,7 +600,7 @@ bool Tas5805mComponent::set_eq_off_() {
   if (!this->tas5805m_eq_enabled_) return true;
   if (!this->tas5805m_write_byte_(TAS5805M_DSP_MISC, TAS5805M_CTRL_EQ_OFF)) return false;
   this->tas5805m_eq_enabled_ = false;
-  ESP_LOGD(TAG, "EQ control Off");
+  ESP_LOGV(TAG, "EQ control Off");
   #endif
   return true;
 }
@@ -605,7 +610,7 @@ bool Tas5805mComponent::set_eq_on_() {
   if (this->tas5805m_eq_enabled_) return true;
   if (!this->tas5805m_write_byte_(TAS5805M_DSP_MISC, TAS5805M_CTRL_EQ_ON)) return false;
   this->tas5805m_eq_enabled_ = true;
-  ESP_LOGD(TAG, "EQ control On");
+  ESP_LOGV(TAG, "EQ control On");
   #endif
   return true;
 }
@@ -657,7 +662,7 @@ bool Tas5805mComponent::set_mixer_mode_(MixerMode mode) {
       break;
 
     default:
-      ESP_LOGD(TAG, "Invalid %s", MIXER_MODE);
+      ESP_LOGW(TAG, "Invalid %s", MIXER_MODE);
       return false;
   }
 
