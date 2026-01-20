@@ -404,7 +404,7 @@ bool Tas5805mComponent::set_eq_gain(uint8_t band, int8_t gain) {
       ESP_LOGE(TAG, "%s%s%d @ page 0x%02X", ERROR, EQ_BAND, band, next_page);
       return false;
     }
-    if(!this->tas5805m_write_bytes_(NEXT_PAGE_OFFSET, const_cast<uint8_t *>(reg_value->value + reg_value->bytes_in_block1), bytes_in_block2)) {
+    if(!this->tas5805m_write_bytes_(NEXT_PAGE_OFFSET, const_cast<uint8_t *>(reg_value->value + bytes_in_block1), bytes_in_block2)) {
       ESP_LOGE(TAG, "%s%s%d Gain: offset 0x%02X for %d bytes", ERROR, EQ_BAND, band, NEXT_PAGE_OFFSET, bytes_in_block2);
       return false;
     }
