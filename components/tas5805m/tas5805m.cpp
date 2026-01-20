@@ -398,8 +398,6 @@ bool Tas5805mComponent::set_eq_gain(uint8_t band, int8_t gain) {
   //   ESP_LOGE(TAG, "%s%s%d Gain: offset 0x%02X for %d bytes", ERROR, EQ_BAND, band, eq_address->offset, bytes_in_block1);
   // }
 
-  //uint8_t bytes_in_block2 = COEFFICENTS_PER_EQ_BAND - bytes_in_block1;
-
   ESP_LOGE(TAG, "EQ Band: %d write to page: 0x%02X, offset: 0x%02X, block1: %d, block2: %d ", band, eq_address->page, eq_address->offset,bytes_in_block1, bytes_in_block2);
 
 
