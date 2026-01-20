@@ -1,18 +1,21 @@
 import esphome.codegen as cg
+import esphome.final_validate as fv
 import esphome.config_validation as cv
 from esphome.components import i2c
 from esphome.components.audio_dac import AudioDac
 from esphome import pins
 
 from esphome.const import (
-    CONF_ID,
+    # CONF_ADDRESS,
     CONF_ENABLE_PIN,
+    CONF_ID,
 )
 
 CODEOWNERS = ["@mrtoy-me"]
 DEPENDENCIES = ["i2c"]
 
 CONF_ANALOG_GAIN = "analog_gain"
+CONF_AUDIO_DAC = "audio_dac"
 CONF_DAC_MODE = "dac_mode"
 CONF_IGNORE_FAULT = "ignore_fault"
 CONF_MIXER_MODE = "mixer_mode"
@@ -93,6 +96,10 @@ CONFIG_SCHEMA = cv.All(
     .add_extra(validate_config),
     cv.only_on_esp32,
 )
+# full_config = fv.full_config.get()
+
+# if full_config[CONF_AUDIO_DAC][CONF_ADDRESS]:
+
 
 async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
