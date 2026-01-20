@@ -56,7 +56,6 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
   void config_volume_max(float volume_max) {this->tas5805m_volume_max_ = (int8_t)(volume_max); }
   void config_volume_min(float volume_min) {this->tas5805m_volume_min_ = (int8_t)(volume_min); }
   void config_i2c_address(uint8_t dac_address) {this->tas58x5m_address_ = dac_address; }
-  config_i2c_address
 
   #ifdef USE_TAS5805M_BINARY_SENSOR
   SUB_BINARY_SENSOR(have_fault)
@@ -227,9 +226,12 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
   // what dac
    #ifdef USE_TAS5805M_DAC
    uint8_t tas58xxm_model_{5};
-   #endif
-   #ifdef USE_TAS5805M_DAC
+   #else
+    #ifdef USE_TAS5805M_DAC
    uint8_t tas58xxm_model_{25};
+    #else
+   uint8_t tas58xxm_model_{0};
+    #endif
    #endif
 
    // eq band currently being refreshed
