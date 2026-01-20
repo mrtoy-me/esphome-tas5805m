@@ -295,12 +295,16 @@ void Tas5805mComponent::dump_config() {
               "  Volume Minimum: %idB\n"
               "  Ignore Fault: %s\n"
               "  Refresh EQ: %s\n",
+              "  I2C Address: 0x%02X%",
+              "  DDAC Model: %d",
               this->number_registers_configured_, this->tas5805m_analog_gain_,
               this->tas5805m_dac_mode_ ? "PBTL" : "BTL",
               MIXER_MODE_TEXT[this->tas5805m_mixer_mode_],
               this->tas5805m_volume_max_, this->tas5805m_volume_min_,
               this->ignore_clock_faults_when_clearing_faults_ ? "CLOCK FAULTS" : "NONE",
-              this->auto_refresh_ ? "BY SWITCH" : "BY GAIN"
+              this->auto_refresh_ ? "BY SWITCH" : "BY GAIN",
+              this->tas58x5m_address_,
+              this->tas58xxm_model_
               );
       LOG_UPDATE_INTERVAL(this);
       break;
@@ -361,7 +365,7 @@ bool Tas5805mComponent::set_eq_gain(uint8_t band, int8_t gain) {
 
   // runs when 'refresh_settings_triggered_' is true
 
-  ESP_LOGD(TAG, "Set %s%d Gain: %ddB", EQ_BAND, band, gain);
+  ESP_LOGV(TAG, "Set %s%d Gain: %ddB", EQ_BAND, band, gain);
 
   uint8_t x = (gain + TAS5805M_EQ_MAX_DB);
 
@@ -392,7 +396,7 @@ bool Tas5805mComponent::set_eq_gain(uint8_t band, int8_t gain) {
     return false;
   }
 
-  ESP_LOGD(TAG, "EQ Band: %d write to page: 0x%02X, offset: 0x%02X, block1: %d, block2: %d ", band, eq_address->page, eq_address->offset,bytes_in_block1, bytes_in_block2);
+  ESP_LOGVV(TAG, "Write EQ Band: %d gain: %ddb to page: 0x%02X, offset: 0x%02X, block1: %d, block2: %d ", band, gain, eq_address->page, eq_address->offset, bytes_in_block1, bytes_in_block2);
 
   if(!this->tas5805m_write_bytes_(eq_address->offset, const_cast<uint8_t *>(reg_value->value), bytes_in_block1)) {
     ESP_LOGE(TAG, "%s%s%d Gain: offset 0x%02X for %d bytes", ERROR, EQ_BAND, band, eq_address->offset, bytes_in_block1);

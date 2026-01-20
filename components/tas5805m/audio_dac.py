@@ -6,7 +6,7 @@ from esphome.components.audio_dac import AudioDac
 from esphome import pins
 
 from esphome.const import (
-    # CONF_ADDRESS,
+    CONF_ADDRESS,
     CONF_ENABLE_PIN,
     CONF_ID,
 )
@@ -17,12 +17,16 @@ DEPENDENCIES = ["i2c"]
 CONF_ANALOG_GAIN = "analog_gain"
 CONF_AUDIO_DAC = "audio_dac"
 CONF_DAC_MODE = "dac_mode"
+CONF_TAS58XX_DAC = "tas58xx_dac"
 CONF_IGNORE_FAULT = "ignore_fault"
 CONF_MIXER_MODE = "mixer_mode"
 CONF_REFRESH_EQ = "refresh_eq"
 CONF_VOLUME_MIN = "volume_min"
 CONF_VOLUME_MAX = "volume_max"
 CONF_TAS5805M_ID = "tas5805m_id"
+
+TAS5805M_I2C_ADDR = 0x2D
+TAS5825M_I2C_ADDR = 0x4C
 
 tas5805m_ns = cg.esphome_ns.namespace("tas5805m")
 Tas5805mComponent = tas5805m_ns.class_("Tas5805mComponent", AudioDac, cg.PollingComponent, i2c.I2CDevice)
@@ -31,6 +35,12 @@ AutoRefreshMode = tas5805m_ns.enum("AutoRefreshMode")
 AUTO_REFRESH_MODES = {
      "BY_GAIN"  : AutoRefreshMode.BY_GAIN,
      "BY_SWITCH": AutoRefreshMode.BY_SWITCH,
+}
+
+TasDac = tas5805m_ns.enum("TasDac")
+TAS_DACS = {
+    "TAS5805M" : TasDac.TAS5805M,
+    "TAS5825M" : TasDac.TAS5825M,
 }
 
 DacMode = tas5805m_ns.enum("DacMode")
@@ -68,6 +78,9 @@ CONFIG_SCHEMA = cv.All(
         {
             cv.GenerateID(): cv.declare_id(Tas5805mComponent),
             cv.Required(CONF_ENABLE_PIN): pins.gpio_output_pin_schema,
+            cv.Optional(CONF_TAS58XX_DAC, default="TAS5805M"): cv.enum(
+                        TAS_DACS, upper=True
+            ),
             cv.Optional(CONF_ANALOG_GAIN, default="-15.5dB"): cv.All(
                         cv.decibel, cv.one_of(*ANALOG_GAINS)
             ),
@@ -92,16 +105,21 @@ CONFIG_SCHEMA = cv.All(
         }
     )
     .extend(cv.polling_component_schema("1s"))
-    .extend(i2c.i2c_device_schema(None))
+    .extend(i2c.i2c_device_schema(0x00))
     .add_extra(validate_config),
     cv.only_on_esp32,
 )
-# full_config = fv.full_config.get()
-
-# if full_config[CONF_AUDIO_DAC][CONF_ADDRESS]:
-
 
 async def to_code(config):
+    # full_config = fv.full_config.get()
+    tas58xx_dac = config.get(CONF_TAS58XX_DAC)
+    if tas58xx_dac == "TAS5805M":
+        config[CONF_ADDRESS] = TAS5805M_I2C_ADDR
+        # full_config[CONF_AUDIO_DAC][CONF_ADDRESS] = TAS5805M_I2C_ADDR
+    else:
+        config[CONF_ADDRESS] = TAS5825M_I2C_ADDR
+        # full_config[CONF_AUDIO_DAC][CONF_ADDRESS] = TAS5825M_I2C_ADDR
+
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
     await i2c.register_i2c_device(var, config)
@@ -114,3 +132,8 @@ async def to_code(config):
     cg.add(var.config_refresh_eq(config[CONF_REFRESH_EQ]))
     cg.add(var.config_volume_max(config[CONF_VOLUME_MAX]))
     cg.add(var.config_volume_min(config[CONF_VOLUME_MIN]))
+    cg.add(var.config_i2c_address(config[CONF_ADDRESS]))
+    if tas58xx_dac == "TAS5805M":
+        cg.add_define("USE_TAS5805M_DAC")
+    else:
+        cg.add_define("USE_TAS5805M_DAC")
