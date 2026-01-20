@@ -284,8 +284,8 @@ void Tas5805mComponent::dump_config() {
       ESP_LOGE(TAG, "  %s setting up Tas5805m: %i", ERROR, this->i2c_error_);
       break;
     case NONE:
-      LOG_PIN("  Enable Pin: ", this->enable_pin_);
       LOG_I2C_DEVICE(this);
+      LOG_PIN("  Enable Pin: ", this->enable_pin_);
       ESP_LOGCONFIG(TAG,
               "  Registers Configured: %i\n"
               "  Analog Gain: %3.1fdB\n"
@@ -295,18 +295,16 @@ void Tas5805mComponent::dump_config() {
               "  Volume Minimum: %idB\n"
               "  Ignore Fault: %s\n"
               "  Refresh EQ: %s\n",
-              "  I2C Address: 0x%02X\n",
-              "  DAC Model: %d\n",
               this->number_registers_configured_, this->tas5805m_analog_gain_,
               this->tas5805m_dac_mode_ ? "PBTL" : "BTL",
               MIXER_MODE_TEXT[this->tas5805m_mixer_mode_],
               this->tas5805m_volume_max_, this->tas5805m_volume_min_,
               this->ignore_clock_faults_when_clearing_faults_ ? "CLOCK FAULTS" : "NONE",
-              this->auto_refresh_ ? "BY SWITCH" : "BY GAIN",
-              this->tas58xxm_address_,
-              this->tas58xxm_model_
+              this->auto_refresh_ ? "BY SWITCH" : "BY GAIN"
               );
       LOG_UPDATE_INTERVAL(this);
+      ESP_LOGI(TAG, "  I2C Address: 0x%02X",this->tas58xxm_address_);
+      ESP_LOGI(TAG, "  DAC Model: %d", this->tas58xxm_model_);
       break;
   }
 

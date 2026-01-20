@@ -227,7 +227,7 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
    #ifdef USE_TAS5805M_DAC
    uint8_t tas58xxm_model_{5};
    #else
-    #ifdef USE_TAS5805M_DAC
+    #ifdef USE_TAS5825M_DAC
    uint8_t tas58xxm_model_{25};
     #else
    uint8_t tas58xxm_model_{0};

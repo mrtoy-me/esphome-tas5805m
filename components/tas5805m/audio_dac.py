@@ -136,4 +136,4 @@ async def to_code(config):
     if tas58xx_dac == "TAS5805M":
         cg.add_define("USE_TAS5805M_DAC")
     else:
-        cg.add_define("USE_TAS5805M_DAC")
+        cg.add_define("USE_TAS5825M_DAC")
