@@ -380,10 +380,17 @@ bool Tas5805mComponent::set_eq_gain(uint8_t band, int8_t gain) {
   //   return false;
   // }
 
-  uint8_t bytes_in_block1 = MAX_OFFSET_PLUS1 - eq_address->offset;
+  uint8_t bytes_in_block1{COEFFICENTS_PER_EQ_BAND};
+  uint8_t bytes_in_block2{0};
 
+  if ((eq_address->offset + COEFFICENTS_PER_EQ_BAND) > MAX_OFFSET_PLUS1) {
+    bytes_in_block1 = MAX_OFFSET_PLUS1 - eq_address->offset;
+    bytes_in_block2 = COEFFICENTS_PER_EQ_BAND - bytes_in_block1;
+  }
+
+  // should not be needed as previous condition would exclude
   if (bytes_in_block1 > COEFFICENTS_PER_EQ_BAND) {
-    ESP_LOGE(TAG, "%s invalid block size: %s%d @ page 0x%02X", ERROR, EQ_BAND, band, eq_address->page);
+    ESP_LOGE(TAG, "%s%s %d invalid first block size: %d", ERROR, EQ_BAND, band, bytes_in_block1);
     return false;
   }
 
@@ -391,7 +398,7 @@ bool Tas5805mComponent::set_eq_gain(uint8_t band, int8_t gain) {
   //   ESP_LOGE(TAG, "%s%s%d Gain: offset 0x%02X for %d bytes", ERROR, EQ_BAND, band, eq_address->offset, bytes_in_block1);
   // }
 
-  uint8_t bytes_in_block2 = COEFFICENTS_PER_EQ_BAND - bytes_in_block1;
+  //uint8_t bytes_in_block2 = COEFFICENTS_PER_EQ_BAND - bytes_in_block1;
 
   ESP_LOGE(TAG, "EQ Band: %d write to page: 0x%02X, offset: 0x%02X, block1: %d, block2: %d ", band, eq_address->page, eq_address->offset,bytes_in_block1, bytes_in_block2);
 
