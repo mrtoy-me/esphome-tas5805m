@@ -361,7 +361,7 @@ bool Tas5805mComponent::set_eq_gain(uint8_t band, int8_t gain) {
 
   // runs when 'refresh_settings_triggered_' is true
 
-  ESP_LOGI(TAG, "Set %s%d Gain: %ddB", EQ_BAND, band, gain);
+  ESP_LOGD(TAG, "Set %s%d Gain: %ddB", EQ_BAND, band, gain);
 
   uint8_t x = (gain + TAS5805M_EQ_MAX_DB);
 
@@ -373,12 +373,10 @@ bool Tas5805mComponent::set_eq_gain(uint8_t band, int8_t gain) {
     return false;
   }
 
-  ESP_LOGE(TAG, "EQ Band: %d write to page: 0x%02X offset: 0x%02X, ", band, eq_address->page, eq_address->offset);
-
-  // if(!this->set_book_and_page_(TAS5805M_REG_BOOK_EQ, eq_address->page)) {
-  //   ESP_LOGE(TAG, "%s%s%d @ page 0x%02X", ERROR, EQ_BAND, band, eq_address->page);
-  //   return false;
-  // }
+  if(!this->set_book_and_page_(TAS5805M_REG_BOOK_EQ, eq_address->page)) {
+    ESP_LOGE(TAG, "%s%s%d @ page 0x%02X", ERROR, EQ_BAND, band, eq_address->page);
+    return false;
+  }
 
   uint8_t bytes_in_block1{COEFFICENTS_PER_EQ_BAND};
   uint8_t bytes_in_block2{0};
@@ -394,27 +392,24 @@ bool Tas5805mComponent::set_eq_gain(uint8_t band, int8_t gain) {
     return false;
   }
 
-  // if(!this->tas5805m_write_bytes_(eq_address->offset, const_cast<uint8_t *>(reg_value->value), bytes_in_block1)) {
-  //   ESP_LOGE(TAG, "%s%s%d Gain: offset 0x%02X for %d bytes", ERROR, EQ_BAND, band, eq_address->offset, bytes_in_block1);
-  // }
+  ESP_LOGD(TAG, "EQ Band: %d write to page: 0x%02X, offset: 0x%02X, block1: %d, block2: %d ", band, eq_address->page, eq_address->offset,bytes_in_block1, bytes_in_block2);
 
-  ESP_LOGE(TAG, "EQ Band: %d write to page: 0x%02X, offset: 0x%02X, block1: %d, block2: %d ", band, eq_address->page, eq_address->offset,bytes_in_block1, bytes_in_block2);
+  if(!this->tas5805m_write_bytes_(eq_address->offset, const_cast<uint8_t *>(reg_value->value), bytes_in_block1)) {
+    ESP_LOGE(TAG, "%s%s%d Gain: offset 0x%02X for %d bytes", ERROR, EQ_BAND, band, eq_address->offset, bytes_in_block1);
+  }
 
-
-  // if (bytes_in_block2 != 0) {
-  //   uint8_t next_page = eq_address->page + 1;
-  //   if(!this->set_book_and_page_(TAS5805M_REG_BOOK_EQ, next_page)) {
-  //     ESP_LOGE(TAG, "%s%s%d @ page 0x%02X", ERROR, EQ_BAND, band, next_page);
-  //     return false;
-  //   }
-  //   if(!this->tas5805m_write_bytes_(NEXT_PAGE_OFFSET, const_cast<uint8_t *>(reg_value->value + reg_value->bytes_in_block1), bytes_in_block2)) {
-  //     ESP_LOGE(TAG, "%s%s%d Gain: offset 0x%02X for %d bytes", ERROR, EQ_BAND, band, NEXT_PAGE_OFFSET, bytes_in_block2);
-  //     return false;
-  //   }
-  // }
-
-  // return this->set_book_and_page_(TAS5805M_REG_BOOK_CONTROL_PORT, TAS5805M_REG_PAGE_ZERO);
-  return true;
+  if (bytes_in_block2 != 0) {
+    uint8_t next_page = eq_address->page + 1;
+    if(!this->set_book_and_page_(TAS5805M_REG_BOOK_EQ, next_page)) {
+      ESP_LOGE(TAG, "%s%s%d @ page 0x%02X", ERROR, EQ_BAND, band, next_page);
+      return false;
+    }
+    if(!this->tas5805m_write_bytes_(NEXT_PAGE_OFFSET, const_cast<uint8_t *>(reg_value->value + reg_value->bytes_in_block1), bytes_in_block2)) {
+      ESP_LOGE(TAG, "%s%s%d Gain: offset 0x%02X for %d bytes", ERROR, EQ_BAND, band, NEXT_PAGE_OFFSET, bytes_in_block2);
+      return false;
+    }
+  }
+  return this->set_book_and_page_(TAS5805M_REG_BOOK_CONTROL_PORT, TAS5805M_REG_PAGE_ZERO);
 }
 #endif
 
