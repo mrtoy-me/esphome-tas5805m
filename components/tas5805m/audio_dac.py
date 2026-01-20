@@ -1,5 +1,4 @@
 import esphome.codegen as cg
-import esphome.final_validate as fv
 import esphome.config_validation as cv
 from esphome.components import i2c
 from esphome.components.audio_dac import AudioDac
@@ -111,14 +110,11 @@ CONFIG_SCHEMA = cv.All(
 )
 
 async def to_code(config):
-    # full_config = fv.full_config.get()
     tas58xx_dac = config.get(CONF_TAS58XX_DAC)
     if tas58xx_dac == "TAS5805M":
         config[CONF_ADDRESS] = TAS5805M_I2C_ADDR
-        # full_config[CONF_AUDIO_DAC][CONF_ADDRESS] = TAS5805M_I2C_ADDR
     else:
         config[CONF_ADDRESS] = TAS5825M_I2C_ADDR
-        # full_config[CONF_AUDIO_DAC][CONF_ADDRESS] = TAS5825M_I2C_ADDR
 
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
