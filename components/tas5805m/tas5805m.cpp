@@ -295,15 +295,15 @@ void Tas5805mComponent::dump_config() {
               "  Volume Minimum: %idB\n"
               "  Ignore Fault: %s\n"
               "  Refresh EQ: %s\n",
-              "  I2C Address: 0x%02X%",
-              "  DDAC Model: %d",
+              "  I2C Address: 0x%02X\n",
+              "  DAC Model: %d\n",
               this->number_registers_configured_, this->tas5805m_analog_gain_,
               this->tas5805m_dac_mode_ ? "PBTL" : "BTL",
               MIXER_MODE_TEXT[this->tas5805m_mixer_mode_],
               this->tas5805m_volume_max_, this->tas5805m_volume_min_,
               this->ignore_clock_faults_when_clearing_faults_ ? "CLOCK FAULTS" : "NONE",
               this->auto_refresh_ ? "BY SWITCH" : "BY GAIN",
-              this->tas58x5m_address_,
+              this->tas58xxm_address_,
               this->tas58xxm_model_
               );
       LOG_UPDATE_INTERVAL(this);

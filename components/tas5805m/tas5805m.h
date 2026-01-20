@@ -49,13 +49,13 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
     this->ignore_clock_faults_when_clearing_faults_ = (ignore_fault_mode == ExcludeIgnoreMode::CLOCK_FAULT);
   }
 
-  void config_mixer_mode(MixerMode mixer_mode) {this->tas5805m_mixer_mode_ = mixer_mode; }
+  void config_mixer_mode(MixerMode mixer_mode) { this->tas5805m_mixer_mode_ = mixer_mode; }
 
   void config_refresh_eq(AutoRefreshMode auto_refresh) { this->auto_refresh_ = auto_refresh; }
 
-  void config_volume_max(float volume_max) {this->tas5805m_volume_max_ = (int8_t)(volume_max); }
-  void config_volume_min(float volume_min) {this->tas5805m_volume_min_ = (int8_t)(volume_min); }
-  void config_i2c_address(uint8_t dac_address) {this->tas58x5m_address_ = dac_address; }
+  void config_volume_max(float volume_max) { this->tas5805m_volume_max_ = (int8_t)(volume_max); }
+  void config_volume_min(float volume_min) { this->tas5805m_volume_min_ = (int8_t)(volume_min); }
+  void config_i2c_address(uint8_t dac_address) { this->tas58xxm_address_ = dac_address; }
 
   #ifdef USE_TAS5805M_BINARY_SENSOR
   SUB_BINARY_SENSOR(have_fault)
@@ -243,7 +243,7 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
    // used for counting number of 'loops' iterations for delay of starting 'loop'
    uint8_t loop_counter_{0};
 
-   uint8_t tas58x5m_address_{0};
+   uint8_t tas58xxm_address_{0};
 
    // number tas5805m registers configured during 'setup'
    uint16_t number_registers_configured_{0};
