@@ -365,7 +365,7 @@ bool Tas5805mComponent::set_eq_gain(uint8_t band, int8_t gain) {
 
   uint8_t x = (gain + TAS5805M_EQ_MAX_DB);
 
-  const AddressSequenceEq* eq_address = TAS5805M_EQ_ADDRESS[band];
+  const AddressSequenceEq* eq_address = &TAS5805M_EQ_ADDRESS[band];
   const RegisterSequenceEq* reg_value = &TAS5805M_EQ_REGISTERS[x][band];
 
   if ((reg_value == NULL) || (eq_address == NULL)) {
@@ -384,7 +384,7 @@ bool Tas5805mComponent::set_eq_gain(uint8_t band, int8_t gain) {
 
   if (bytes_in_block1 > COEFFICENTS_PER_EQ_BAND) {
     ESP_LOGE(TAG, "%s invalid block size: %s%d @ page 0x%02X", ERROR, EQ_BAND, band, eq_address->page);
-    return false
+    return false;
   }
 
   // if(!this->tas5805m_write_bytes_(eq_address->offset, const_cast<uint8_t *>(reg_value->value), bytes_in_block1)) {
