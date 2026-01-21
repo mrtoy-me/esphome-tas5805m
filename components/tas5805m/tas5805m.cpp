@@ -313,8 +313,8 @@ void Tas5805mComponent::dump_config() {
               this->auto_refresh_ ? "BY SWITCH" : "BY GAIN"
               );
       LOG_UPDATE_INTERVAL(this);
-      ESP_LOGI(TAG, "  I2C Address: 0x%02X",this->tas58xxm_address_);
-      ESP_LOGI(TAG, "  DAC Model: %d", this->tas58xxm_model_);
+      // ESP_LOGI(TAG, "  I2C Address: 0x%02X",this->tas58xxm_address_);
+      // ESP_LOGI(TAG, "  DAC Model: %d", this->tas58xxm_model_);
       break;
   }
 
@@ -671,11 +671,11 @@ bool Tas5805mComponent::set_eq_on_() {
     ESP_LOGE(TAG, "%s on book and page set for EQ control", ERROR);
     return false;
   }
-  if (!this->tas5805m_write_bytes_(TAS5825M_GANG_EQ , reinterpret_cast<uint8_t *>(&TAS5825M_CTRL_EQ_GANGED), 4)) {
+  if (!this->tas5805m_write_bytes_(TAS5825M_GANG_EQ , const_cast<uint8_t *>(&TAS5825M_CTRL_EQ_GANGED), 4)) {
     ESP_LOGE(TAG, "%s writing EQ Ganged", ERROR);
     return false;
   }
-  if (!this->tas5805m_write_bytes_(TAS5825M_EQ_BYPASS, reinterpret_cast<uint8_t *>(&TAS5825M_CTRL_EQ_ON), 4)) {
+  if (!this->tas5805m_write_bytes_(TAS5825M_EQ_BYPASS, const_cast<uint8_t *>(&TAS5825M_CTRL_EQ_ON), 4)) {
     ESP_LOGE(TAG, "%s writing EQ on", ERROR);
     return false;
   }
