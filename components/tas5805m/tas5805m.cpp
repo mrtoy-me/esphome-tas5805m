@@ -29,8 +29,9 @@ void Tas5805mComponent::setup() {
   if (this->enable_pin_ != nullptr) {
     this->enable_pin_->setup();
     this->enable_pin_->digital_write(false);
-    delay(10);
+    delay(1);
     this->enable_pin_->digital_write(true);
+    delay(5);
   }
 
   if (!this->configure_registers_()) {
