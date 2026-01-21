@@ -642,8 +642,8 @@ bool Tas5805mComponent::set_eq_off_() {
     ESP_LOGE(TAG, "%s on book and page set for EQ control", ERROR);
     return false;
   }
-
-  if (!this->tas5805m_write_bytes_(TAS5825M_EQ_BYPASS, reinterpret_cast<uint8_t *>(&TAS5825M_CTRL_EQ_OFF), 4)) {
+  uint32_t control = TAS5825M_CTRL_EQ_OFF;
+  if (!this->tas5805m_write_bytes_(TAS5825M_EQ_BYPASS, reinterpret_cast<uint8_t *>(&control), 4)) {
     ESP_LOGE(TAG, "%s writing EQ off", ERROR);
     return false;
   }
@@ -671,11 +671,13 @@ bool Tas5805mComponent::set_eq_on_() {
     ESP_LOGE(TAG, "%s on book and page set for EQ control", ERROR);
     return false;
   }
-  if (!this->tas5805m_write_bytes_(TAS5825M_GANG_EQ , const_cast<uint8_t *>(&TAS5825M_CTRL_EQ_GANGED), 4)) {
+  uint32_t control = TAS5825M_CTRL_EQ_GANGED;
+  if (!this->tas5805m_write_bytes_(TAS5825M_GANG_EQ , reinterpret_cast<uint8_t *>(&control), 4)) {
     ESP_LOGE(TAG, "%s writing EQ Ganged", ERROR);
     return false;
   }
-  if (!this->tas5805m_write_bytes_(TAS5825M_EQ_BYPASS, const_cast<uint8_t *>(&TAS5825M_CTRL_EQ_ON), 4)) {
+  control = TAS5825M_CTRL_EQ_ON;
+  if (!this->tas5805m_write_bytes_(TAS5825M_EQ_BYPASS, reinterpret_cast<uint8_t *>(&control), 4)) {
     ESP_LOGE(TAG, "%s writing EQ on", ERROR);
     return false;
   }
