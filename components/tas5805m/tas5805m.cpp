@@ -6,7 +6,12 @@
 
 namespace esphome::tas5805m {
 
+#ifdef USE_TAS5805M_DAC
 static const char *const TAG               = "tas5805m";
+#else
+static const char *const TAG               = "tas5825m";
+#endif
+
 static const char *const ERROR             = "Error ";
 static const char *const MIXER_MODE        = "Mixer Mode";
 static const char *const EQ_BAND           = "EQ Band ";
@@ -278,7 +283,11 @@ void Tas5805mComponent::publish_global_faults_() {
 #endif
 
 void Tas5805mComponent::dump_config() {
+  #ifdef USE_TAS5805M_DAC
   ESP_LOGCONFIG(TAG, "Tas5805m Audio Dac:");
+  #else
+  ESP_LOGCONFIG(TAG, "Tas5825m Audio Dac:");
+  #endif
 
   switch (this->error_code_) {
     case CONFIGURATION_FAILED:
@@ -368,7 +377,12 @@ bool Tas5805mComponent::set_eq_gain(uint8_t band, int8_t gain) {
 
   uint8_t x = (gain + TAS5805M_EQ_MAX_DB);
 
+  #ifdef USE_TAS5805M_DAC
   const AddressSequenceEq* eq_address = &TAS5805M_EQ_ADDRESS[band];
+  #else
+  const AddressSequenceEq* eq_address = &TAS5825M_EQ_ADDRESS[band];
+  #endif
+
   const RegisterSequenceEq* reg_value = &TAS5805M_EQ_REGISTERS[x][band];
 
   if ((reg_value == NULL) || (eq_address == NULL)) {
@@ -605,11 +619,13 @@ bool Tas5805mComponent::set_digital_volume_(uint8_t raw_volume) {
 }
 
 #ifdef USE_TAS5805M_EQ
+// changed to just return value of protected variable; does not matter since not currently used
 bool Tas5805mComponent::get_eq_(bool* enabled) {
-  uint8_t current_value;
-  if (!this->tas5805m_read_byte_(TAS5805M_DSP_MISC, &current_value)) return false;
-  *enabled = !(current_value & 0x01);
-  this->tas5805m_eq_enabled_ = *enabled;
+  // uint8_t current_value;
+  // if (!this->tas5805m_read_byte_(TAS5805M_DSP_MISC, &current_value)) return false;
+  // *enabled = !(current_value & 0x01);
+  // this->tas5805m_eq_enabled_ = *enabled;
+  *enabled = this->tas5805m_eq_enabled_;
   return true;
 }
 #endif
@@ -617,7 +633,26 @@ bool Tas5805mComponent::get_eq_(bool* enabled) {
 bool Tas5805mComponent::set_eq_off_() {
   #ifdef USE_TAS5805M_EQ
   if (!this->tas5805m_eq_enabled_) return true;
+
+  #ifdef USE_TAS5805M_DAC
   if (!this->tas5805m_write_byte_(TAS5805M_DSP_MISC, TAS5805M_CTRL_EQ_OFF)) return false;
+  #else
+  // USE_TAS5825M_DAC
+  if(!this->set_book_and_page_(TAS5825M_EQ_CTRL_BOOK, TAS5825M_EQ_CTRL_PAGE)) {
+    ESP_LOGE(TAG, "%s on book and page set for EQ control", ERROR);
+    return false;
+  }
+
+  if (!this->tas5805m_write_bytes_(TAS5825M_EQ_BYPASS, reinterpret_cast<uint8_t *>(&TAS5825M_CTRL_EQ_OFF), 4)) {
+    ESP_LOGE(TAG, "%s writing EQ off", ERROR);
+    return false;
+  }
+  if (!this->set_book_and_page_(TAS5805M_REG_BOOK_CONTROL_PORT, TAS5805M_REG_PAGE_ZERO)) {
+    ESP_LOGE(TAG, "%s on book and page reset", ERROR);
+    return false;
+  }
+  #endif
+
   this->tas5805m_eq_enabled_ = false;
   ESP_LOGV(TAG, "EQ control Off");
   #endif
@@ -627,7 +662,29 @@ bool Tas5805mComponent::set_eq_off_() {
 bool Tas5805mComponent::set_eq_on_() {
   #ifdef USE_TAS5805M_EQ
   if (this->tas5805m_eq_enabled_) return true;
+
+  #ifdef USE_TAS5805M_DAC
   if (!this->tas5805m_write_byte_(TAS5805M_DSP_MISC, TAS5805M_CTRL_EQ_ON)) return false;
+  #else
+  // USE_TAS5825M_DAC
+   if(!this->set_book_and_page_(TAS5825M_EQ_CTRL_BOOK, TAS5825M_EQ_CTRL_PAGE)) {
+    ESP_LOGE(TAG, "%s on book and page set for EQ control", ERROR);
+    return false;
+  }
+  if (!this->tas5805m_write_bytes_(TAS5825M_GANG_EQ , reinterpret_cast<uint8_t *>(&TAS5825M_CTRL_EQ_GANGED), 4)) {
+    ESP_LOGE(TAG, "%s writing EQ Ganged", ERROR);
+    return false;
+  }
+  if (!this->tas5805m_write_bytes_(TAS5825M_EQ_BYPASS, reinterpret_cast<uint8_t *>(&TAS5825M_CTRL_EQ_ON), 4)) {
+    ESP_LOGE(TAG, "%s writing EQ on", ERROR);
+    return false;
+  }
+  if (!this->set_book_and_page_(TAS5805M_REG_BOOK_CONTROL_PORT, TAS5805M_REG_PAGE_ZERO)) {
+    ESP_LOGE(TAG, "%s on book and page reset", ERROR);
+    return false;
+  }
+  #endif
+
   this->tas5805m_eq_enabled_ = true;
   ESP_LOGV(TAG, "EQ control On");
   #endif

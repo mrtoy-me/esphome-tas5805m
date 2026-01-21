@@ -55,7 +55,6 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
 
   void config_volume_max(float volume_max) { this->tas5805m_volume_max_ = (int8_t)(volume_max); }
   void config_volume_min(float volume_min) { this->tas5805m_volume_min_ = (int8_t)(volume_min); }
-  void config_i2c_address(uint8_t dac_address) { this->tas58xxm_address_ = dac_address; }
 
   #ifdef USE_TAS5805M_BINARY_SENSOR
   SUB_BINARY_SENSOR(have_fault)
@@ -173,7 +172,7 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
 
    // used if eq gain numbers are defined in YAML
    #ifdef USE_TAS5805M_EQ
-   bool tas5805m_eq_enabled_;
+   bool tas5805m_eq_enabled_{false};
    int8_t tas5805m_eq_gain_[NUMBER_EQ_BANDS]{0};
    #endif
 
@@ -223,17 +222,6 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
    bool using_eq_gains_{false};
    #endif
 
-  // what dac
-   #ifdef USE_TAS5805M_DAC
-   uint8_t tas58xxm_model_{5};
-   #else
-    #ifdef USE_TAS5825M_DAC
-   uint8_t tas58xxm_model_{25};
-    #else
-   uint8_t tas58xxm_model_{0};
-    #endif
-   #endif
-
    // eq band currently being refreshed
    uint8_t refresh_band_{0};
 
@@ -242,8 +230,6 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
 
    // used for counting number of 'loops' iterations for delay of starting 'loop'
    uint8_t loop_counter_{0};
-
-   uint8_t tas58xxm_address_{0};
 
    // number tas5805m registers configured during 'setup'
    uint16_t number_registers_configured_{0};

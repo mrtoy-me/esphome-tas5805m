@@ -64,7 +64,9 @@ static const uint8_t TAS5805M_BCK_MON                  = 0x38;
 static const uint8_t TAS5805M_DIG_VOL_CTRL             = 0x4C;
 static const uint8_t TAS5805M_ANA_CTRL                 = 0x53;
 static const uint8_t TAS5805M_AGAIN                    = 0x54;
+#ifdef USE_TAS5805M_DAC
 static const uint8_t TAS5805M_DSP_MISC                 = 0x66;
+#endif
 static const uint8_t TAS5805M_POWER_STATE              = 0x68;
 
 // TAS5805M_REG_FAULT register values
@@ -76,8 +78,19 @@ static const uint8_t TAS5805M_FAULT_CLEAR              = 0x78;
 static const uint8_t TAS5805M_ANALOG_FAULT_CLEAR       = 0x80;
 
 // EQ registers
+#ifdef USE_TAS5805M_DAC
 static const uint8_t  TAS5805M_CTRL_EQ_ON              = 0x00;
 static const uint8_t  TAS5805M_CTRL_EQ_OFF             = 0x01;
+#else
+static const uint8_t   TAS5825M_EQ_CTRL_BOOK            = 0x8C;
+static const uint8_t   TAS5825M_EQ_CTRL_PAGE            = 0x0B;
+static const uint8_t   TAS5825M_GANG_EQ                 = 0x28;
+static const uint8_t   TAS5825M_BYPASS_EQ               = 0x2C;
+static const uint32_t  TAS5825M_CTRL_EQ_ON              = 0x00000000; // Bypass EQ = false
+static const uint32_t  TAS5825M_CTRL_EQ_OFF             = 0x00000001;
+static const uint32_t  TAS5825M_CTRL_EQ_GANGED          = 0x00000001; // EQ common for channel
+static const uint32_t  TAS5825M_CTRL_EQ_BY_CHANNEL      = 0x00000000; // EQ per channel
+#endif
 
 // Level meter register
 
