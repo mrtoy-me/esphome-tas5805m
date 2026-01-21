@@ -643,7 +643,7 @@ bool Tas5805mComponent::set_eq_off_() {
     return false;
   }
   uint32_t control = TAS5825M_CTRL_EQ_OFF;
-  if (!this->tas5805m_write_bytes_(TAS5825M_EQ_BYPASS, reinterpret_cast<uint8_t *>(&control), 4)) {
+  if (!this->tas5805m_write_bytes_(TAS5825M_BYPASS_EQ, reinterpret_cast<uint8_t *>(&control), 4)) {
     ESP_LOGE(TAG, "%s writing EQ off", ERROR);
     return false;
   }
@@ -677,7 +677,7 @@ bool Tas5805mComponent::set_eq_on_() {
     return false;
   }
   control = TAS5825M_CTRL_EQ_ON;
-  if (!this->tas5805m_write_bytes_(TAS5825M_EQ_BYPASS, reinterpret_cast<uint8_t *>(&control), 4)) {
+  if (!this->tas5805m_write_bytes_(TAS5825M_BYPASS_EQ, reinterpret_cast<uint8_t *>(&control), 4)) {
     ESP_LOGE(TAG, "%s writing EQ on", ERROR);
     return false;
   }
