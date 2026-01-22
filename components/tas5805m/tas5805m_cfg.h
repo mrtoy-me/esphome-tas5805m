@@ -29,6 +29,7 @@ namespace esphome::tas5805m {
   };
 
   static const char* const MIXER_MODE_TEXT[] = {"STEREO", "STEREO_INVERSE", "MONO", "RIGHT", "LEFT"};
+  static const char* const EQ_MODE_TEXT[]   = {"EQ Off", "EQ On", "BIAMP On"};
 
   struct Tas5805mConfiguration {
     uint8_t offset;
@@ -50,75 +51,66 @@ namespace esphome::tas5805m {
     #endif
   };
 
-// Startup sequence codes
-static const uint8_t TAS5805M_CFG_META_DELAY        = 254;
+  // Startup sequence constants
+  static const uint8_t TAS5805M_CFG_META_DELAY        = 254;
 
-static const float TAS5805M_MIN_ANALOG_GAIN         = -15.5;
-static const float TAS5805M_MAX_ANALOG_GAIN         = 0.0;
+  static const float TAS5805M_MIN_ANALOG_GAIN         = -15.5;
+  static const float TAS5805M_MAX_ANALOG_GAIN         = 0.0;
 
-// set book and page registers
-static const uint8_t TAS5805M_REG_PAGE_SET          = 0x00;
-static const uint8_t TAS5805M_REG_BOOK_SET          = 0x7F;
-static const uint8_t TAS5805M_REG_BOOK_CONTROL_PORT = 0x00;
-static const uint8_t TAS5805M_REG_PAGE_ZERO         = 0x00;
+  // set book and page registers
+  static const uint8_t TAS5805M_REG_PAGE_SET          = 0x00;
+  static const uint8_t TAS5805M_REG_BOOK_SET          = 0x7F;
+  static const uint8_t TAS5805M_REG_BOOK_CONTROL_PORT = 0x00;
+  static const uint8_t TAS5805M_REG_PAGE_ZERO         = 0x00;
 
-// tas5805m registers
-static const uint8_t TAS5805M_DEVICE_CTRL_1         = 0x02;
-static const uint8_t TAS5805M_DEVICE_CTRL_2         = 0x03;
-static const uint8_t TAS5805M_FS_MON                = 0x37;
-static const uint8_t TAS5805M_BCK_MON               = 0x38;
-static const uint8_t TAS5805M_DIG_VOL_CTRL          = 0x4C;
-static const uint8_t TAS5805M_ANA_CTRL              = 0x53;
-static const uint8_t TAS5805M_AGAIN                 = 0x54;
-#ifdef USE_TAS5805M_DAC
-static const uint8_t TAS5805M_DSP_MISC              = 0x66;
-#endif
-static const uint8_t TAS5805M_POWER_STATE           = 0x68;
+  // tas58x5m registers
+  static const uint8_t TAS5805M_DEVICE_CTRL_1         = 0x02;
+  static const uint8_t TAS5805M_DEVICE_CTRL_2         = 0x03;
+  static const uint8_t TAS5805M_FS_MON                = 0x37;
+  static const uint8_t TAS5805M_BCK_MON               = 0x38;
+  static const uint8_t TAS5805M_DIG_VOL_CTRL          = 0x4C;
+  static const uint8_t TAS5805M_ANA_CTRL              = 0x53;
+  static const uint8_t TAS5805M_AGAIN                 = 0x54;
+  #ifdef USE_TAS5805M_DAC
+  static const uint8_t TAS5805M_DSP_MISC              = 0x66;
+  #endif
+  static const uint8_t TAS5805M_POWER_STATE           = 0x68;
 
-// TAS5805M_REG_FAULT register values
-static const uint8_t TAS5805M_CHAN_FAULT            = 0x70;
-static const uint8_t TAS5805M_GLOBAL_FAULT1         = 0x71;
-static const uint8_t TAS5805M_GLOBAL_FAULT2         = 0x72;
-static const uint8_t TAS5805M_OT_WARNING            = 0x73;
-static const uint8_t TAS5805M_FAULT_CLEAR           = 0x78;
-static const uint8_t TAS5805M_ANALOG_FAULT_CLEAR    = 0x80;
+  // TAS5805M FAULT constants
+  static const uint8_t TAS5805M_CHAN_FAULT            = 0x70;
+  static const uint8_t TAS5805M_GLOBAL_FAULT1         = 0x71;
+  static const uint8_t TAS5805M_GLOBAL_FAULT2         = 0x72;
+  static const uint8_t TAS5805M_OT_WARNING            = 0x73;
+  static const uint8_t TAS5805M_FAULT_CLEAR           = 0x78;
+  static const uint8_t TAS5805M_ANALOG_FAULT_CLEAR    = 0x80;
 
-// EQ
-static const uint8_t   EQ_MODE_SIZE                    = 3;
-#ifdef USE_TAS5805M_DAC
-// static const uint8_t  TAS5805M_CTRL_EQ_ON           = 0x00;
-// static const uint8_t  TAS5805M_CTRL_EQ_OFF          = 0x01;
-static const uint8_t   TAS5805M_CTRL_EQ[EQ_MODE_SIZE]  = {0b0111, 0b0110, 0b1110};
-#else
-static const uint8_t   TAS5825M_EQ_CTRL_BOOK          = 0x8C;
-static const uint8_t   TAS5825M_EQ_CTRL_PAGE          = 0x0B;
-static const uint8_t   TAS5825M_GANG_EQ               = 0x28;
-static const uint8_t   TAS5825M_BYPASS_EQ             = 0x2C;
+  // EQ constants
+  #ifdef USE_TAS5805M_DAC
+  static const uint8_t   TAS5805M_CTRL_EQ[]           = {0b0111, 0b0110, 0b1110};
+  #else
+  static const uint8_t   TAS5825M_EQ_CTRL_BOOK        = 0x8C;
+  static const uint8_t   TAS5825M_EQ_CTRL_PAGE        = 0x0B;
+  static const uint8_t   TAS5825M_GANG_EQ             = 0x28;
+  static const uint8_t   TAS5825M_BYPASS_EQ           = 0x2C;
 
-static const uint32_t  TAS5825M_CTRL_BYPASS_EQ[EQ_MODE_SIZE] = {0x00000001, 0x00000000, 0x00000000}; // 0x00000000 Bypass EQ = false ie EQ enabled
-static const uint32_t  TAS5825M_CTRL_GANGED_EQ[EQ_MODE_SIZE] = {0x00000001, 0x00000001, 0x00000000}; // 0x00000001 EQ Ganged ie L/R channel common coefficients
+  static const uint32_t  TAS5825M_CTRL_BYPASS_EQ[]    = {0x00000001, 0x00000000, 0x00000000}; // 0x00000000 Bypass EQ = false ie EQ enabled
+  static const uint32_t  TAS5825M_CTRL_GANGED_EQ[]    = {0x00000001, 0x00000001, 0x00000000}; // 0x00000001 EQ Ganged ie L/R channel common coefficients
+  #endif
 
-// static const uint32_t  TAS5825M_CTRL_EQ_ON              = 0x00000000; // Bypass EQ = false
-// static const uint32_t  TAS5825M_CTRL_EQ_OFF             = 0x00000001;
-// static const uint32_t  TAS5825M_CTRL_EQ_GANGED          = 0x00000001; // EQ common for channel
-// static const uint32_t  TAS5825M_CTRL_EQ_BY_CHANNEL      = 0x00000000; // EQ per channel
-#endif
+  // Level meter constants
 
-// Level meter register
-
-// Mixer registers
-static const uint8_t TAS5805M_REG_BOOK_5               = 0x8C;
-static const uint8_t TAS5805M_REG_BOOK_5_MIXER_PAGE    = 0x29;
-static const uint8_t TAS5805M_REG_LEFT_TO_LEFT_GAIN    = 0x18;
-static const uint8_t TAS5805M_REG_RIGHT_TO_LEFT_GAIN   = 0x1C;
-static const uint8_t TAS5805M_REG_LEFT_TO_RIGHT_GAIN   = 0x20;
-static const uint8_t TAS5805M_REG_RIGHT_TO_RIGHT_GAIN  = 0x24;
-static const uint8_t TAS5805M_REG_BOOK_5_VOLUME_PAGE   = 0x2A;
-static const uint8_t TAS5805M_REG_LEFT_VOLUME          = 0x24;
-static const uint8_t TAS5805M_REG_RIGHT_VOLUME         = 0x28;
-static const uint32_t TAS5805M_MIXER_VALUE_MUTE        = 0x00000000;
-static const uint32_t TAS5805M_MIXER_VALUE_0DB         = 0x00008000;
-//static const uint32_t TAS5805M_MIXER_VALUE_MINUS6DB    = 0xE7264000;
-static const uint32_t TAS5805M_MIXER_VALUE_MINUS6DB    = 0x00004000;
+  // Mixer constants
+  static const uint8_t TAS5805M_REG_BOOK_5               = 0x8C;
+  static const uint8_t TAS5805M_REG_BOOK_5_MIXER_PAGE    = 0x29;
+  static const uint8_t TAS5805M_REG_LEFT_TO_LEFT_GAIN    = 0x18;
+  static const uint8_t TAS5805M_REG_RIGHT_TO_LEFT_GAIN   = 0x1C;
+  static const uint8_t TAS5805M_REG_LEFT_TO_RIGHT_GAIN   = 0x20;
+  static const uint8_t TAS5805M_REG_RIGHT_TO_RIGHT_GAIN  = 0x24;
+  static const uint8_t TAS5805M_REG_BOOK_5_VOLUME_PAGE   = 0x2A;
+  static const uint8_t TAS5805M_REG_LEFT_VOLUME          = 0x24;
+  static const uint8_t TAS5805M_REG_RIGHT_VOLUME         = 0x28;
+  static const uint32_t TAS5805M_MIXER_VALUE_MUTE        = 0x00000000;
+  static const uint32_t TAS5805M_MIXER_VALUE_0DB         = 0x00008000;
+  static const uint32_t TAS5805M_MIXER_VALUE_MINUS6DB    = 0x00004000;
 
 }  // namespace esphome::tas5805m
