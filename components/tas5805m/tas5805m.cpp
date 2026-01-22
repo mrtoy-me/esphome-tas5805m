@@ -461,7 +461,7 @@ void Tas5805mComponent::refresh_settings() {
   this->refresh_settings_triggered_ = true;
 
   #ifdef USE_TAS5805M_EQ
-  ESP_LOGD(TAG, "Refresh triggered: EQ %s", this->tas5805m_eq_enabled_ ? "Enabled" : "Disabled");
+  ESP_LOGD(TAG, "EQ Refresh triggered");
   #endif
   return;
 }
