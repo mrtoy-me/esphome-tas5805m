@@ -117,7 +117,7 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
    bool set_digital_volume_(uint8_t new_volume);
 
    #ifdef USE_TAS5805M_EQ
-   bool get_eq_(EqMode* current_mode)
+   bool get_eq_(EqMode* current_mode);
    #endif
 
    bool set_eq_(EqMode new_mode)
