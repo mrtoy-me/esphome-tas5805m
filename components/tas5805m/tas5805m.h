@@ -120,7 +120,7 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
    bool get_eq_(EqMode* current_mode);
    #endif
 
-   bool set_eq_(EqMode new_mode)
+   bool set_eq_(EqMode new_mode);
 
    bool get_mixer_mode_(MixerMode *mode);
    bool set_mixer_mode_(MixerMode mode);
