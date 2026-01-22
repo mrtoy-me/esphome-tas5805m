@@ -371,7 +371,7 @@ bool Tas5805mComponent::set_eq_gain(uint8_t band, int8_t gain) {
 
   // runs when 'refresh_settings_triggered_' is true
 
-  ESP_LOGV(TAG, "Set %s%d Gain: %ddB", EQ_BAND, band, gain);
+  ESP_LOGV(TAG, "Set %s%d Gain >> %ddB", EQ_BAND, band, gain);
 
   uint8_t x = (gain + TAS5805M_EQ_MAX_DB);
 
@@ -459,7 +459,7 @@ void Tas5805mComponent::refresh_settings() {
   this->refresh_settings_triggered_ = true;
 
   #ifdef USE_TAS5805M_EQ
-  ESP_LOGD(TAG, "EQ Refresh triggered: %d", this->tas5805m_eq_mode_);
+  ESP_LOGD(TAG, "EQ Refresh triggered");
   #endif
   return;
 }
@@ -496,7 +496,7 @@ bool Tas5805mComponent::set_volume(float volume) {
   if (!this->set_digital_volume_(raw_volume)) return false;
   #if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERBOSE
     int8_t dB = -(raw_volume / 2) + 24;
-    ESP_LOGV(TAG, "Volume: %idB", dB);
+    ESP_LOGV(TAG, "Volume: >> %idB", dB);
   #endif
   return true;
 }
@@ -530,7 +530,7 @@ bool Tas5805mComponent::set_analog_gain_(float gain_db) {
   new_again = (current_again & 0xE0) | new_again;
   if (!this->tas5805m_write_byte_(TAS5805M_AGAIN, new_again)) return false;
 
-  ESP_LOGD(TAG, "Analog Gain: %fdB", gain_db);
+  ESP_LOGD(TAG, "Analog Gain >> %fdB", gain_db);
   return true;
 }
 
@@ -562,7 +562,7 @@ bool Tas5805mComponent::set_dac_mode_(DacMode mode) {
   // 'tas5805m_state_' global already has dac mode from YAML config
   // save anyway so 'set_dac_mode' could be used more generally
   this->tas5805m_dac_mode_ = mode;
-  ESP_LOGD(TAG, "DAC mode: %s", this->tas5805m_dac_mode_ ? "PBTL" : "BTL");
+  ESP_LOGD(TAG, "DAC mode >> %s", this->tas5805m_dac_mode_ ? "PBTL" : "BTL");
   return true;
 }
 
@@ -573,7 +573,7 @@ bool Tas5805mComponent::set_deep_sleep_off_() {
   if (!this->tas5805m_write_byte_(TAS5805M_DEVICE_CTRL_2, new_value)) return false;
 
   this->tas5805m_control_state_ = CTRL_PLAY;                        // set Control State to play
-  ESP_LOGV(TAG, "Deep Sleep Off");
+  ESP_LOGV(TAG, "Deep Sleep >> Off");
   #if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERBOSE
   if (this->is_muted_) ESP_LOGV(TAG, "Mute On preserved");
   #endif
@@ -588,7 +588,7 @@ bool Tas5805mComponent::set_deep_sleep_on_() {
   if (!this->tas5805m_write_byte_(TAS5805M_DEVICE_CTRL_2, new_value)) return false;
 
   this->tas5805m_control_state_ = CTRL_DEEP_SLEEP;                   // set Control State to deep sleep
-  ESP_LOGV(TAG, "Deep Sleep On");
+  ESP_LOGV(TAG, "Deep Sleep >> On");
   #if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERBOSE
   if (this->is_muted_) ESP_LOGD(TAG, "Mute On preserved");
   #endif
@@ -653,7 +653,7 @@ bool Tas5805mComponent::set_eq_(EqMode new_mode) {
   #endif
 
   this->tas5805m_eq_mode_ = new_mode;
-  ESP_LOGV(TAG, "EQ control: %S", new_mode);
+  ESP_LOGV(TAG, "EQ mode >> %S", EQ_MODE_TEXT[new_mode]);
   #endif
   return true;
 }
@@ -742,7 +742,7 @@ bool Tas5805mComponent::set_mixer_mode_(MixerMode mode) {
   // 'tas5805m_state_' global already has mixer mode from YAML config
   // save anyway so 'set_mixer_mode' could be used more generally in future
   this->tas5805m_mixer_mode_ = mode;
-  ESP_LOGD(TAG, "%s: %s", MIXER_MODE, MIXER_MODE_TEXT[this->tas5805m_mixer_mode_]);
+  ESP_LOGD(TAG, "%s >> %s", MIXER_MODE, MIXER_MODE_TEXT[this->tas5805m_mixer_mode_]);
   return true;
 }
 
