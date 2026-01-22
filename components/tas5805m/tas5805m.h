@@ -117,11 +117,10 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
    bool set_digital_volume_(uint8_t new_volume);
 
    #ifdef USE_TAS5805M_EQ
-   bool get_eq_(bool* enabled);
+   bool get_eq_(EqMode* current_mode)
    #endif
 
-   bool set_eq_on_();
-   bool set_eq_off_();
+   bool set_eq_(EqMode new_mode)
 
    bool get_mixer_mode_(MixerMode *mode);
    bool set_mixer_mode_(MixerMode mode);
@@ -172,7 +171,7 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
 
    // used if eq gain numbers are defined in YAML
    #ifdef USE_TAS5805M_EQ
-   bool tas5805m_eq_enabled_{false};
+   EqMode tas5805m_eq_mode_{EQ_OFF};
    int8_t tas5805m_eq_gain_[NUMBER_EQ_BANDS]{0};
    #endif
 
