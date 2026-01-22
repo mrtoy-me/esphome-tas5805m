@@ -146,6 +146,7 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
    bool tas5805m_read_bytes_(uint8_t a_register, uint8_t* data, uint8_t number_bytes);
    bool tas5805m_write_byte_(uint8_t a_register, uint8_t data);
    bool tas5805m_write_bytes_(uint8_t a_register, uint8_t *data, uint8_t len);
+   bool tas5805m_paged_write(uint8_t book, uint8_t page, uint8_t a_register, uint8_t* data, uint8_t len);
 
    enum ErrorCode {
      NONE = 0,

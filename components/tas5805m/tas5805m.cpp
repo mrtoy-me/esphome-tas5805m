@@ -818,4 +818,43 @@ bool Tas5805mComponent::tas5805m_write_bytes_(uint8_t a_register, uint8_t* data,
   return true;
 }
 
+  bool Tas5805mComponent::tas5805m_paged_write(uint8_t book, uint8_t page, uint8_t a_register, uint8_t* data, uint8_t len) {
+  const uint8_t PAGE_SIZE = 128;   // TAS5805M register page size
+  const uint8_t MIN_REGISTER = 8;  // data is stored starting at 8
+  uint8_t reg = a_register;
+  uint8_t* ptr = data;
+  uint8_t remaining = len;
+
+  this->set_book_and_page_(book, page);
+
+  while (remaining > 0) {
+    uint8_t space_in_page = PAGE_SIZE - reg;
+    uint8_t chunk = (remaining < space_in_page) ? remaining : space_in_page;
+
+    // Perform the chunked write
+    i2c::ErrorCode error_code = this->write_register(reg, ptr, chunk);
+    if (error_code != i2c::ERROR_OK) {
+      ESP_LOGE(TAG, "%s writing: %i", ERROR, error_code);
+      this->i2c_error_ = static_cast<uint8_t>(error_code);
+      return false;
+    }
+
+    // Advance pointers
+    reg += chunk;
+    reg %= PAGE_SIZE;
+    if (reg < MIN_REGISTER) {
+      reg = MIN_REGISTER;
+    }
+    ptr += chunk;
+    remaining -= chunk;
+    page += 1;
+
+    if (!this->tas5805m_write_byte_(TAS5805M_REG_PAGE_SET, page)) {
+      ESP_LOGE(TAG, "%s setting page %d", ERROR, page);
+      return false;
+    }
+  }
+  return true;
+}
+
 }  // namespace esphome::tas5805m
