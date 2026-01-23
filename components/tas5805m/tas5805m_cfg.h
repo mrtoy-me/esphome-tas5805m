@@ -117,4 +117,13 @@ namespace esphome::tas5805m {
     };
     static constexpr uint8_t CROSSBAR_CONFIG_COUNT = 12;
 
+    enum MonoMixerMode: uint8_t {
+        MONO_MIXER_MODE_LEFT = 0,
+        MONO_MIXER_MODE_RIGHT,
+        MONO_MIXER_MODE_STEREO,
+        MONO_MIXER_MODE_EQ_LEFT,
+        MONO_MIXER_MODE_EQ_RIGHT,
+      };
+    static constexpr auto MONO_MIXER_MODE_TEXT[] = {"LEFT", "RIGHT", "STEREO", "EQ_LEFT", "EQ_RIGHT"};
+
 } // namespace esphome::tas5805m

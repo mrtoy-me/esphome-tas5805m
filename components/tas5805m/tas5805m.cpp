@@ -102,11 +102,6 @@ namespace esphome::tas5805m {
         // can be written within 'loop'
 
         switch (this->settings_refresh_state_) {
-            case COMPLETE:
-                // settings are only refreshed once
-                // disable 'loop' once all eq gains have been written
-                this->disable_loop(); // requires Esphome 2025.7.0
-                return;
             case IDLE:
                 // refresh has not been triggered yet
                 return;
@@ -153,7 +148,17 @@ namespace esphome::tas5805m {
                 if (!this->set_crossbar_(this->tas5805m_crossbar_config_)) {
                     ESP_LOGW(TAG, "%ssetting Crossbar Config", ERROR);
                 }
+                this->settings_refresh_state_ = SET_MONO_MIXER_MODE;
+            case SET_MONO_MIXER_MODE:
+                if (!this->set_mono_mixer_mode_(this->tas5805m_mono_mixer_mode_)) {
+                    ESP_LOGW(TAG, "%ssetting Mono Mixer Mode", ERROR);
+                }
                 this->settings_refresh_state_ = COMPLETE;
+            case COMPLETE:
+                // settings are only refreshed once
+                // disable 'loop' once all tasks are done
+                this->disable_loop(); // requires Esphome 2025.7.0
+                return;
         }
     }
 
@@ -422,7 +427,7 @@ bool Tas5805mComponent::set_eq_gain(uint8_t band, int8_t gain) {
     // used by 'enable_eq_switch' and 'eq_gain_band16000hz'
     void Tas5805mComponent::refresh_settings() {
         // If the settings refresh has already been triggered, there is nothing to do.
-        if (this->settings_refresh_state_>IDLE) return;
+        if (this->settings_refresh_state_ > IDLE) return;
 
         // triggers 'loop' to configure mixer mode and eq gains
         // allows 'set_eq_gains' to now write eq gains rather than deferring for later setup
@@ -707,18 +712,66 @@ bool Tas5805mComponent::get_eq_(bool* enabled) {
         return true;
     }
 
+    bool Tas5805mComponent::set_mono_mixer_mode_(MonoMixerMode mode) {
+        static const uint8_t TAS5805M_REG_MONO_MIXER_REGISTERS_START = 0x28;
+        struct l_r_leq_req {
+            uint32_t l, r, leq, req;
+        };
+        auto registers = l_r_leq_req{};
+
+        switch (mode) {
+            case MONO_MIXER_MODE_LEFT:
+                registers.l = TAS5805M_MIXER_VALUE_0DB;
+                registers.r = TAS5805M_MIXER_VALUE_MUTE;
+                registers.leq = TAS5805M_MIXER_VALUE_MUTE;
+                registers.req = TAS5805M_MIXER_VALUE_MUTE;
+            case MONO_MIXER_MODE_RIGHT:
+                registers.l = TAS5805M_MIXER_VALUE_MUTE;
+                registers.r = TAS5805M_MIXER_VALUE_0DB;
+                registers.leq = TAS5805M_MIXER_VALUE_MUTE;
+                registers.req = TAS5805M_MIXER_VALUE_MUTE;
+            case MONO_MIXER_MODE_STEREO:
+                registers.l = TAS5805M_MIXER_VALUE_MINUS6DB;
+                registers.r = TAS5805M_MIXER_VALUE_MINUS6DB;
+                registers.leq = TAS5805M_MIXER_VALUE_MUTE;
+                registers.req = TAS5805M_MIXER_VALUE_MUTE;
+            case MONO_MIXER_MODE_EQ_LEFT:
+                registers.l = TAS5805M_MIXER_VALUE_MUTE;
+                registers.r = TAS5805M_MIXER_VALUE_MUTE;
+                registers.leq = TAS5805M_MIXER_VALUE_0DB;
+                registers.req = TAS5805M_MIXER_VALUE_MUTE;
+            case MONO_MIXER_MODE_EQ_RIGHT:
+                registers.l = TAS5805M_MIXER_VALUE_MUTE;
+                registers.r = TAS5805M_MIXER_VALUE_MUTE;
+                registers.leq = TAS5805M_MIXER_VALUE_MUTE;
+                registers.req = TAS5805M_MIXER_VALUE_0DB;
+        }
+        if (!this->tas5805m_paged_write(
+            TAS5805M_REG_BOOK_5,
+            TAS5805M_REG_BOOK_5_MIXER_PAGE,
+            TAS5805M_REG_MONO_MIXER_REGISTERS_START,
+            reinterpret_cast<uint8_t *>(&registers),
+            sizeof(registers)
+            )) {
+            ESP_LOGE(TAG, "%swriting mono mixer registers.");
+            return false;
+        }
+        ESP_LOGD(TAG, "Mono mixer mode: %s", MONO_MIXER_MODE_TEXT[mode]);
+        return true;
+    }
+
 
     bool Tas5805mComponent::set_crossbar_(CrossbarConfig config) {
-        if(!this->set_book_and_page_(TAS5805M_REG_BOOK_5, TAS5805M_REG_BOOK_5_MIXER_PAGE)) {
+        if (!this->set_book_and_page_(TAS5805M_REG_BOOK_5, TAS5805M_REG_BOOK_5_MIXER_PAGE)) {
             ESP_LOGE(TAG, "%s begin Set %s", ERROR, CROSSBAR);
             return false;
         }
-        for (int i = 0; i< CROSSBAR_CONFIG_COUNT; i++) {
+        for (int i = 0; i < CROSSBAR_CONFIG_COUNT; i++) {
             uint8_t writeValue = TAS5805M_CROSSBAR_VALUE_MUTE;
             if (config & (1 << i)) {
                 writeValue = TAS5805M_CROSSBAR_VALUE_0DB;
             }
-            if (!this->tas5805m_write_bytes_(TAS5805M_REG_OUTPUT_CROSSBAR_BEGINNING+i*4, &writeValue, 4)) {
+            if (!this->tas5805m_write_bytes_(TAS5805M_REG_OUTPUT_CROSSBAR_BEGINNING + i * 4, &writeValue, 4)) {
                 ESP_LOGE(TAG, "%s Output Crossbar Value %d", ERROR, i);
                 return false;
             }
@@ -738,7 +791,8 @@ bool Tas5805mComponent::get_eq_(bool* enabled) {
     bool Tas5805mComponent::set_crossover_f(float crossover_frequency) {
         constexpr uint8_t SUBEQ_PAGE = 0x29;
         constexpr uint8_t SUBEQ_BQ1L_REG = 0x38;
-        constexpr uint8_t SUBEQ_SAMPLE_RATE = 20000; // PPC3 computes coefficients for a sample rate of 20kHz. Is this always correct?
+        constexpr uint8_t SUBEQ_SAMPLE_RATE = 20000;
+        // PPC3 computes coefficients for a sample rate of 20kHz. Is this always correct?
 
         auto biquad = butterworth2_tas5805m(SUBEQ_SAMPLE_RATE, crossover_frequency, BUTTERWORTH2_LOWPASS);
 

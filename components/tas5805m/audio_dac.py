@@ -16,6 +16,7 @@ CONF_ANALOG_GAIN = "analog_gain"
 CONF_DAC_MODE = "dac_mode"
 CONF_IGNORE_FAULT = "ignore_fault"
 CONF_MIXER_MODE = "mixer_mode"
+CONF_MONO_MIXER_MODE = "mono_mixer_mode"
 CONF_CROSSOVER_FREQUENCY = "crossover_frequency"
 CONF_CROSSBAR = "crossbar"
 CONF_REFRESH_EQ = "refresh_eq"
@@ -50,6 +51,15 @@ MIXER_MODES = {
     "MONO": MixerMode.MONO,
     "RIGHT": MixerMode.RIGHT,
     "LEFT": MixerMode.LEFT,
+}
+
+MonoMixerMode = tas5805m_ns.enum("MonoMixerMode")
+MONO_MIXER_MODES = {
+    "LEFT": MonoMixerMode.MONO_MIXER_MODE_LEFT,
+    "RIGHT": MonoMixerMode.MONO_MIXER_MODE_RIGHT,
+    "STEREO": MonoMixerMode.MONO_MIXER_MODE_STEREO,
+    "EQ_LEFT": MonoMixerMode.MONO_MIXER_MODE_EQ_LEFT,
+    "EQ_RIGHT": MonoMixerMode.MONO_MIXER_MODE_EQ_RIGHT,
 }
 
 ANALOG_GAINS = [-15.5, -15, -14.5, -14, -13.5, -13, -12.5, -12, -11.5, -11, -10.5, -10, -9.5, -9, -8.5, -8,
@@ -112,6 +122,9 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(CONF_MIXER_MODE, default="STEREO"): cv.enum(
                 MIXER_MODES, upper=True
             ),
+            cv.Optional(CONF_MONO_MIXER_MODE, default="STEREO"): cv.enum(
+                MONO_MIXER_MODES, upper=True
+            ),
             cv.Optional(CONF_CROSSOVER_FREQUENCY, default="-1Hz"): cv.All(
                 cv.frequency, cv.int_range(0, 25000)
             ),
@@ -144,12 +157,11 @@ async def to_code(config):
     cg.add(var.config_dac_mode(config[CONF_DAC_MODE]))
     cg.add(var.config_ignore_fault_mode(config[CONF_IGNORE_FAULT]))
     cg.add(var.config_mixer_mode(config[CONF_MIXER_MODE]))
+    cg.add(var.config_mono_mixer_mode(config[CONF_MONO_MIXER_MODE]))
     cg.add(var.config_crossover_frequency(config[CONF_CROSSOVER_FREQUENCY]))
     for k, v in config[CONF_CROSSBAR]:
         enum_val = CROSSBAR_CONFIGS[k]
         cg.add(var.config_crossbar_flag(enum_val, v))
-
-    cg.add(var.config_crossbar(config[CONF_CROSSBAR]))
     cg.add(var.config_refresh_eq(config[CONF_REFRESH_EQ]))
     cg.add(var.config_volume_max(config[CONF_VOLUME_MAX]))
     cg.add(var.config_volume_min(config[CONF_VOLUME_MIN]))

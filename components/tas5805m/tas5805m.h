@@ -50,6 +50,7 @@ namespace esphome::tas5805m {
         }
 
         void config_mixer_mode(MixerMode mixer_mode) { this->tas5805m_mixer_mode_ = mixer_mode; }
+        void config_mono_mixer_mode(const MonoMixerMode mono_mixer_mode) { this->tas5805m_mono_mixer_mode_ = mono_mixer_mode; }
 
         void config_crossover_frequency(float crossover_frequency) { this->tas5805m_crossover_freq_ = crossover_frequency; }
 
@@ -147,6 +148,8 @@ namespace esphome::tas5805m {
 
         bool set_mixer_mode_(MixerMode mode);
 
+        bool set_mono_mixer_mode_(MonoMixerMode mode);
+
         bool set_crossbar_(CrossbarConfig config);
 
         bool get_state_(ControlState *state);
@@ -199,6 +202,7 @@ namespace esphome::tas5805m {
         int8_t tas5805m_volume_min_;
 
         MixerMode tas5805m_mixer_mode_;
+        MonoMixerMode tas5805m_mono_mixer_mode_;
 
         CrossbarConfig tas5805m_crossbar_config_;
         float tas5805m_crossover_freq_;
@@ -240,6 +244,7 @@ namespace esphome::tas5805m {
             WRITE_EQ_BAND,
             SET_CROSSOVER_FREQUENCY,
             SET_CROSSBAR,
+            SET_MONO_MIXER_MODE,
             COMPLETE
         };
 
