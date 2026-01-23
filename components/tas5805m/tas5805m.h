@@ -199,29 +199,19 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
    // counts number of times the faults register is cleared (used for publishing to sensor)
    uint32_t times_faults_cleared_{0};
 
-   // only ever changed to true once when mixer mode is written
-   // used by 'loop'
-   bool mixer_mode_configured_{false};
 
-   // only ever changed to true once when 'loop' has completed refreshing settings
-   // used to trigger disabling of 'loop'
-   bool refresh_settings_complete_{false};
-
-   // only ever changed to true once to trigger 'refresh_settings()'
-   // when true 'set_eq_gains' is allowed to write eq gains
-   // when 'refresh_settings_complete_' is false and 'refresh_settings_triggered_' is true
-   // 'loop' will write mixer mode and if setup in YAML, also eq gains
-   bool refresh_settings_triggered_{false};
+    enum SettingsRefreshState {
+        IDLE,
+        TRIGGERED,
+        WAIT_DELAY,
+        SET_MIXER_MODE,
+        WRITE_EQ_BAND,
+        COMPLETE
+    };
+    SettingsRefreshState settings_refresh_state_{IDLE};
 
    // use to indicate if delay before starting 'update' starting is complete
    bool update_delay_finished_{false};
-
-   // are eq gain numbers configured in YAML
-   #ifdef USE_TAS5805M_EQ
-   bool using_eq_gains_{true};
-   #else
-   bool using_eq_gains_{false};
-   #endif
 
    // eq band currently being refreshed
    uint8_t refresh_band_{0};
@@ -235,8 +225,8 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
    // number tas5805m registers configured during 'setup'
    uint16_t number_registers_configured_{0};
 
-   // initialised in loop, used for delay in starting 'update'
-   uint32_t start_time_;
+   // initialised in configure_registers, used to compute delay before starting 'update'
+   uint32_t start_time_{0};
 };
 
 }  // namespace esphome::tas5805m
