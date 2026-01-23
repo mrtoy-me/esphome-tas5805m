@@ -112,8 +112,6 @@ CONFIG_SCHEMA = cv.All(
 async def to_code(config):
     tas58xx_dac = config.get(CONF_TAS58XX_DAC)
     if tas58xx_dac == "TAS5825M":
-    #     config[CONF_ADDRESS] = TAS5805M_I2C_ADDR
-    # else:
         config[CONF_ADDRESS] = TAS5825M_I2C_ADDR
 
     var = cg.new_Pvariable(config[CONF_ID])
@@ -128,7 +126,6 @@ async def to_code(config):
     cg.add(var.config_refresh_eq(config[CONF_REFRESH_EQ]))
     cg.add(var.config_volume_max(config[CONF_VOLUME_MAX]))
     cg.add(var.config_volume_min(config[CONF_VOLUME_MIN]))
-    # cg.add(var.config_i2c_address(config[CONF_ADDRESS]))
     if tas58xx_dac == "TAS5805M":
         cg.add_define("USE_TAS5805M_DAC")
     else:
