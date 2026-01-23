@@ -51,8 +51,9 @@ namespace esphome::tas5805m {
 
         void config_mixer_mode(MixerMode mixer_mode) { this->tas5805m_mixer_mode_ = mixer_mode; }
 
-        void config_crossover_f(float crossover_frequency) { this->tas5805m_crossover_freq_ = crossover_frequency; }
+        void config_crossover_frequency(float crossover_frequency) { this->tas5805m_crossover_freq_ = crossover_frequency; }
 
+        void config_crossbar() {} // TODO: Set crossbar from YAML
         void config_refresh_eq(AutoRefreshMode auto_refresh) { this->auto_refresh_ = auto_refresh; }
 
         void config_volume_max(float volume_max) { this->tas5805m_volume_max_ = (int8_t) (volume_max); }
@@ -140,6 +141,8 @@ namespace esphome::tas5805m {
 
         bool set_mixer_mode_(MixerMode mode);
 
+        bool set_crossbar_(CrossbarConfig config);
+
         bool get_state_(ControlState *state);
 
         bool set_state_(ControlState state);
@@ -191,6 +194,7 @@ namespace esphome::tas5805m {
 
         MixerMode tas5805m_mixer_mode_;
 
+        CrossbarConfig tas5805m_crossbar_config_;
         float tas5805m_crossover_freq_;
 
         // used if eq gain numbers are defined in YAML
@@ -229,6 +233,7 @@ namespace esphome::tas5805m {
             SET_MIXER_MODE,
             WRITE_EQ_BAND,
             SET_CROSSOVER_FREQUENCY,
+            SET_CROSSBAR,
             COMPLETE
         };
 

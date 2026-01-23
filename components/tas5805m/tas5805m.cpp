@@ -8,13 +8,14 @@
 #include "esphome/core/hal.h"
 
 namespace esphome::tas5805m {
-    static const char *const TAG = "tas5805m";
-    static const char *const ERROR = "Error ";
-    static const char *const MIXER_MODE = "Mixer Mode";
-    static const char *const EQ_BAND = "EQ Band ";
+    static const auto TAG = "tas5805m";
+    static const auto ERROR = "Error ";
+    static const auto MIXER_MODE = "Mixer Mode";
+    static const auto CROSSBAR = "Crossbar";
+    static const auto EQ_BAND = "EQ Band ";
 
-    static const uint8_t TAS5805M_MUTE_CONTROL = 0x08; // LR Channel Mute
-    static const uint8_t REMOVE_CLOCK_FAULT = 0xFB; // used to zero clock fault bit of global_fault1 register
+    static constexpr uint8_t TAS5805M_MUTE_CONTROL = 0x08; // LR Channel Mute
+    static constexpr uint8_t REMOVE_CLOCK_FAULT = 0xFB; // used to zero clock fault bit of global_fault1 register
 
     // maximum delay allowed in "tas5805m_minimal.h" used in configure_registers()
     static const uint8_t ESPHOME_MAXIMUM_DELAY = 5; // milliseconds
@@ -144,7 +145,14 @@ namespace esphome::tas5805m {
                 this->settings_refresh_state_ = SET_CROSSOVER_FREQUENCY;
                 break;
             case SET_CROSSOVER_FREQUENCY:
-                this->set_crossover_f(this->tas5805m_crossover_freq_);
+                if (!this->set_crossover_f(this->tas5805m_crossover_freq_)) {
+                    ESP_LOGW(TAG, "%ssetting Crossover Frequency", ERROR);
+                };
+                this->settings_refresh_state_ = SET_CROSSBAR;
+            case SET_CROSSBAR:
+                if (!this->set_crossbar_(this->tas5805m_crossbar_config_)) {
+                    ESP_LOGW(TAG, "%ssetting Crossbar Config", ERROR);
+                }
                 this->settings_refresh_state_ = COMPLETE;
         }
     }
@@ -696,6 +704,33 @@ bool Tas5805mComponent::get_eq_(bool* enabled) {
         // save anyway so 'set_mixer_mode' could be used more generally in future
         this->tas5805m_mixer_mode_ = mode;
         ESP_LOGD(TAG, "%s: %s", MIXER_MODE, MIXER_MODE_TEXT[this->tas5805m_mixer_mode_]);
+        return true;
+    }
+
+
+    bool Tas5805mComponent::set_crossbar_(CrossbarConfig config) {
+        if(!this->set_book_and_page_(TAS5805M_REG_BOOK_5, TAS5805M_REG_BOOK_5_MIXER_PAGE)) {
+            ESP_LOGE(TAG, "%s begin Set %s", ERROR, CROSSBAR);
+            return false;
+        }
+        for (int i = 0; i< CROSSBAR_CONFIG_COUNT; i++) {
+            uint8_t writeValue = TAS5805M_CROSSBAR_VALUE_MUTE;
+            if (config & (1 << i)) {
+                writeValue = TAS5805M_CROSSBAR_VALUE_0DB;
+            }
+            if (!this->tas5805m_write_bytes_(TAS5805M_REG_OUTPUT_CROSSBAR_BEGINNING+i*4, &writeValue, 4)) {
+                ESP_LOGE(TAG, "%s Output Crossbar Value %d", ERROR, i);
+                return false;
+            }
+        }
+
+        if (!this->set_book_and_page_(TAS5805M_REG_BOOK_CONTROL_PORT, TAS5805M_REG_PAGE_ZERO)) {
+            ESP_LOGE(TAG, "%s end Set %s", ERROR, CROSSBAR);
+            return false;
+        }
+
+
+        ESP_LOGD(TAG, "%s: %d", CROSSBAR, config);
         return true;
     }
 

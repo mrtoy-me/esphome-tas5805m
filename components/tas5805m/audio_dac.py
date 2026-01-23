@@ -17,6 +17,7 @@ CONF_DAC_MODE = "dac_mode"
 CONF_IGNORE_FAULT = "ignore_fault"
 CONF_MIXER_MODE = "mixer_mode"
 CONF_CROSSOVER_FREQUENCY = "crossover_frequency"
+CONF_CROSSBAR = "crossbar"
 CONF_REFRESH_EQ = "refresh_eq"
 CONF_VOLUME_MIN = "volume_min"
 CONF_VOLUME_MAX = "volume_max"
@@ -61,6 +62,36 @@ def validate_config(config):
         raise cv.Invalid("volume_max must at least 9db greater than volume_min")
     return config
 
+
+
+CROSSBAR_LEFT_TO_AMP_LEFT = "l_to_amp_l",
+CROSSBAR_RIGHT_TO_AMP_LEFT = "r_to_amp_l"
+CROSSBAR_MONO_TO_AMP_LEFT = "mono_to_amp_l"
+CROSSBAR_LEFT_TO_AMP_RIGHT = "l_to_amp_r"
+CROSSBAR_RIGHT_TO_AMP_RIGHT= "r_to_amp_r"
+CROSSBAR_MONO_TO_AMP_RIGHT = "mono_to_amp_r"
+CROSSBAR_LEFT_TO_I2S_LEFT = "left_to_i2s_l"
+CROSSBAR_RIGHT_TO_I2S_LEFT = "right_to_i2s_l"
+CROSSBAR_MONO_TO_I2S_LEFT = "mono_to_i2s_l"
+CROSSBAR_LEFT_TO_I2S_RIGHT = "l_to_i2s_r"
+CROSSBAR_RIGHT_TO_I2S_RIGHT= "r_to_i2s_r"
+CROSSBAR_MONO_TO_I2S_RIGHT = "mono_to_i2s_r"
+
+CrossbarSchema = cv.Schema({
+    cv.Optional(CROSSBAR_LEFT_TO_AMP_LEFT, default="false"): cv.boolean,
+    cv.Optional(CROSSBAR_RIGHT_TO_AMP_LEFT, default="false"): cv.boolean,
+    cv.Optional(CROSSBAR_MONO_TO_AMP_LEFT, default="false"): cv.boolean,
+    cv.Optional(CROSSBAR_LEFT_TO_AMP_RIGHT, default="false"): cv.boolean,
+    cv.Optional(CROSSBAR_RIGHT_TO_AMP_RIGHT, default="false"): cv.boolean,
+    cv.Optional(CROSSBAR_MONO_TO_AMP_RIGHT, default="false"): cv.boolean,
+    cv.Optional(CROSSBAR_LEFT_TO_I2S_LEFT, default="false"): cv.boolean,
+    cv.Optional(CROSSBAR_RIGHT_TO_I2S_LEFT, default="false"): cv.boolean,
+    cv.Optional(CROSSBAR_MONO_TO_I2S_LEFT, default="false"): cv.boolean,
+    cv.Optional(CROSSBAR_LEFT_TO_I2S_RIGHT, default="false"): cv.boolean,
+    cv.Optional(CROSSBAR_RIGHT_TO_I2S_RIGHT, default="false"): cv.boolean,
+    cv.Optional(CROSSBAR_MONO_TO_I2S_RIGHT, default="false"): cv.boolean,
+})
+
 CONFIG_SCHEMA = cv.All(
     cv.Schema(
         {
@@ -90,6 +121,7 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(CONF_VOLUME_MIN, default="-103dB"): cv.All(
                         cv.decibel, cv.int_range(-103, 24)
             ),
+            cv.Optional(CONF_CROSSBAR): CrossbarSchema
         }
     )
     .extend(cv.polling_component_schema("1s"))
@@ -108,7 +140,8 @@ async def to_code(config):
     cg.add(var.config_dac_mode(config[CONF_DAC_MODE]))
     cg.add(var.config_ignore_fault_mode(config[CONF_IGNORE_FAULT]))
     cg.add(var.config_mixer_mode(config[CONF_MIXER_MODE]))
-    cg.add(var.crossover_frequency(config[CONF_CROSSOVER_FREQUENCY]))
+    cg.add(var.config_crossover_frequency(config[CONF_CROSSOVER_FREQUENCY]))
+    cg.add(var.config_crossbar(config[CONF_CROSSBAR]))
     cg.add(var.config_refresh_eq(config[CONF_REFRESH_EQ]))
     cg.add(var.config_volume_max(config[CONF_VOLUME_MAX]))
     cg.add(var.config_volume_min(config[CONF_VOLUME_MIN]))
