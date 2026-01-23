@@ -15,6 +15,7 @@
 
 #include "biquad.h"
 
+
 enum Butterworth2Type {
     BUTTERWORTH2_HIGHPASS = 0,
     BUTTERWORTH2_LOWPASS = 1,

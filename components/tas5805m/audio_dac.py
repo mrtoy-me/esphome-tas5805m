@@ -16,6 +16,7 @@ CONF_ANALOG_GAIN = "analog_gain"
 CONF_DAC_MODE = "dac_mode"
 CONF_IGNORE_FAULT = "ignore_fault"
 CONF_MIXER_MODE = "mixer_mode"
+CONF_CROSSOVER_FREQUENCY = "crossover_frequency"
 CONF_REFRESH_EQ = "refresh_eq"
 CONF_VOLUME_MIN = "volume_min"
 CONF_VOLUME_MAX = "volume_max"
@@ -77,6 +78,9 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(CONF_MIXER_MODE, default="STEREO"): cv.enum(
                         MIXER_MODES, upper=True
             ),
+            cv.Optional(CONF_CROSSOVER_FREQUENCY, default="-1Hz"): cv.All(
+                cv.frequency, cv.int_range(0, 25000)
+            ),
             cv.Optional(CONF_REFRESH_EQ, default="BY_GAIN"): cv.enum(
                         AUTO_REFRESH_MODES, upper=True
             ),
@@ -104,6 +108,7 @@ async def to_code(config):
     cg.add(var.config_dac_mode(config[CONF_DAC_MODE]))
     cg.add(var.config_ignore_fault_mode(config[CONF_IGNORE_FAULT]))
     cg.add(var.config_mixer_mode(config[CONF_MIXER_MODE]))
+    cg.add(var.crossover_frequency(config[CONF_CROSSOVER_FREQUENCY]))
     cg.add(var.config_refresh_eq(config[CONF_REFRESH_EQ]))
     cg.add(var.config_volume_max(config[CONF_VOLUME_MAX]))
     cg.add(var.config_volume_min(config[CONF_VOLUME_MIN]))

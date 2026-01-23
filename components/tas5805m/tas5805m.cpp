@@ -141,6 +141,10 @@ namespace esphome::tas5805m {
                 this->refresh_band_ = 0;
                 this->loop_counter_ = 0;
 #endif
+                this->settings_refresh_state_ = SET_CROSSOVER_FREQUENCY;
+                break;
+            case SET_CROSSOVER_FREQUENCY:
+                this->set_crossover_f(this->tas5805m_crossover_freq_);
                 this->settings_refresh_state_ = COMPLETE;
         }
     }
@@ -695,10 +699,27 @@ bool Tas5805mComponent::get_eq_(bool* enabled) {
         return true;
     }
 
-bool Tas5805mComponent::get_state_(ControlState* state) {
-  *state = this->tas5805m_control_state_;
-  return true;
-}
+    // Adds a single Butterworth2 lowpass into the subwooder eq
+    bool Tas5805mComponent::set_crossover_f(float crossover_frequency) {
+        constexpr uint8_t SUBEQ_PAGE = 0x29;
+        constexpr uint8_t SUBEQ_BQ1L_REG = 0x38;
+        constexpr uint8_t SUBEQ_SAMPLE_RATE = 20000; // PPC3 computes coefficients for a sample rate of 20kHz. Is this always correct?
+
+        auto biquad = butterworth2_tas5805m(SUBEQ_SAMPLE_RATE, crossover_frequency, BUTTERWORTH2_LOWPASS);
+
+        if (!tas5805m_paged_write(TAS5805M_REG_BOOK_EQ, SUBEQ_PAGE, SUBEQ_BQ1L_REG,
+                                  reinterpret_cast<uint8_t *>(&biquad), sizeof(biquad))) {
+            ESP_LOGE(TAG, "%s setting crossover freq to %f", ERROR, crossover_frequency);
+            return false;
+        }
+
+        return this->set_book_and_page_(TAS5805M_REG_BOOK_CONTROL_PORT, TAS5805M_REG_PAGE_ZERO);
+    }
+
+    bool Tas5805mComponent::get_state_(ControlState *state) {
+        *state = this->tas5805m_control_state_;
+        return true;
+    }
 
     bool Tas5805mComponent::set_state_(ControlState state) {
         if (this->tas5805m_control_state_ == state) return true;
