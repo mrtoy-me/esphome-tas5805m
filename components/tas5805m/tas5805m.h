@@ -53,7 +53,13 @@ namespace esphome::tas5805m {
 
         void config_crossover_frequency(float crossover_frequency) { this->tas5805m_crossover_freq_ = crossover_frequency; }
 
-        void config_crossbar() {} // TODO: Set crossbar from YAML
+        void config_crossbar_flag(const CrossbarConfig flag, bool enable) {
+            if (enable) {
+                this->tas5805m_crossbar_config_ = static_cast<CrossbarConfig>(this->tas5805m_crossbar_config_ | flag);
+            } else {
+                this->tas5805m_crossbar_config_ = static_cast<CrossbarConfig>(this->tas5805m_crossbar_config_ & ~flag);
+            }
+        }
         void config_refresh_eq(AutoRefreshMode auto_refresh) { this->auto_refresh_ = auto_refresh; }
 
         void config_volume_max(float volume_max) { this->tas5805m_volume_max_ = (int8_t) (volume_max); }

@@ -28,69 +28,72 @@ Tas5805mComponent = tas5805m_ns.class_("Tas5805mComponent", AudioDac, cg.Polling
 
 AutoRefreshMode = tas5805m_ns.enum("AutoRefreshMode")
 AUTO_REFRESH_MODES = {
-     "BY_GAIN"  : AutoRefreshMode.BY_GAIN,
-     "BY_SWITCH": AutoRefreshMode.BY_SWITCH,
+    "BY_GAIN": AutoRefreshMode.BY_GAIN,
+    "BY_SWITCH": AutoRefreshMode.BY_SWITCH,
 }
 
 DacMode = tas5805m_ns.enum("DacMode")
 DAC_MODES = {
-    "BTL" : DacMode.BTL,
+    "BTL": DacMode.BTL,
     "PBTL": DacMode.PBTL,
 }
 
 ExcludeIgnoreMode = tas5805m_ns.enum("ExcludeIgnoreModes")
 EXCLUDE_IGNORE_MODES = {
-     "NONE"        : ExcludeIgnoreMode.NONE,
-     "CLOCK_FAULT" : ExcludeIgnoreMode.CLOCK_FAULT,
+    "NONE": ExcludeIgnoreMode.NONE,
+    "CLOCK_FAULT": ExcludeIgnoreMode.CLOCK_FAULT,
 }
 MixerMode = tas5805m_ns.enum("MixerMode")
 MIXER_MODES = {
-    "STEREO"         : MixerMode.STEREO,
-    "STEREO_INVERSE" : MixerMode.STEREO_INVERSE,
-    "MONO"           : MixerMode.MONO,
-    "RIGHT"          : MixerMode.RIGHT,
-    "LEFT"           : MixerMode.LEFT,
+    "STEREO": MixerMode.STEREO,
+    "STEREO_INVERSE": MixerMode.STEREO_INVERSE,
+    "MONO": MixerMode.MONO,
+    "RIGHT": MixerMode.RIGHT,
+    "LEFT": MixerMode.LEFT,
 }
 
 ANALOG_GAINS = [-15.5, -15, -14.5, -14, -13.5, -13, -12.5, -12, -11.5, -11, -10.5, -10, -9.5, -9, -8.5, -8,
-                 -7.5,  -7,  -6.5,  -6,  -5.5,  -5,  -4.5,  -4,  -3.5,  -3,  -2.5,  -2, -1.5, -1, -0.5,  0]
+                -7.5, -7, -6.5, -6, -5.5, -5, -4.5, -4, -3.5, -3, -2.5, -2, -1.5, -1, -0.5, 0]
+
 
 def validate_config(config):
-    if config[CONF_DAC_MODE] == "PBTL" and (config[CONF_MIXER_MODE] == "STEREO" or config[CONF_MIXER_MODE] == "STEREO_INVERSE"):
+    if config[CONF_DAC_MODE] == "PBTL" and (
+            config[CONF_MIXER_MODE] == "STEREO" or config[CONF_MIXER_MODE] == "STEREO_INVERSE"):
         raise cv.Invalid("dac_mode: PBTL must have mixer_mode: MONO or RIGHT or LEFT")
     if (config[CONF_VOLUME_MAX] - config[CONF_VOLUME_MIN]) < 9:
         raise cv.Invalid("volume_max must at least 9db greater than volume_min")
     return config
 
 
-
 CROSSBAR_LEFT_TO_AMP_LEFT = "l_to_amp_l",
 CROSSBAR_RIGHT_TO_AMP_LEFT = "r_to_amp_l"
 CROSSBAR_MONO_TO_AMP_LEFT = "mono_to_amp_l"
 CROSSBAR_LEFT_TO_AMP_RIGHT = "l_to_amp_r"
-CROSSBAR_RIGHT_TO_AMP_RIGHT= "r_to_amp_r"
+CROSSBAR_RIGHT_TO_AMP_RIGHT = "r_to_amp_r"
 CROSSBAR_MONO_TO_AMP_RIGHT = "mono_to_amp_r"
 CROSSBAR_LEFT_TO_I2S_LEFT = "left_to_i2s_l"
 CROSSBAR_RIGHT_TO_I2S_LEFT = "right_to_i2s_l"
 CROSSBAR_MONO_TO_I2S_LEFT = "mono_to_i2s_l"
 CROSSBAR_LEFT_TO_I2S_RIGHT = "l_to_i2s_r"
-CROSSBAR_RIGHT_TO_I2S_RIGHT= "r_to_i2s_r"
+CROSSBAR_RIGHT_TO_I2S_RIGHT = "r_to_i2s_r"
 CROSSBAR_MONO_TO_I2S_RIGHT = "mono_to_i2s_r"
 
-CrossbarSchema = cv.Schema({
-    cv.Optional(CROSSBAR_LEFT_TO_AMP_LEFT, default="false"): cv.boolean,
-    cv.Optional(CROSSBAR_RIGHT_TO_AMP_LEFT, default="false"): cv.boolean,
-    cv.Optional(CROSSBAR_MONO_TO_AMP_LEFT, default="false"): cv.boolean,
-    cv.Optional(CROSSBAR_LEFT_TO_AMP_RIGHT, default="false"): cv.boolean,
-    cv.Optional(CROSSBAR_RIGHT_TO_AMP_RIGHT, default="false"): cv.boolean,
-    cv.Optional(CROSSBAR_MONO_TO_AMP_RIGHT, default="false"): cv.boolean,
-    cv.Optional(CROSSBAR_LEFT_TO_I2S_LEFT, default="false"): cv.boolean,
-    cv.Optional(CROSSBAR_RIGHT_TO_I2S_LEFT, default="false"): cv.boolean,
-    cv.Optional(CROSSBAR_MONO_TO_I2S_LEFT, default="false"): cv.boolean,
-    cv.Optional(CROSSBAR_LEFT_TO_I2S_RIGHT, default="false"): cv.boolean,
-    cv.Optional(CROSSBAR_RIGHT_TO_I2S_RIGHT, default="false"): cv.boolean,
-    cv.Optional(CROSSBAR_MONO_TO_I2S_RIGHT, default="false"): cv.boolean,
-})
+CrossBar = tas5805m_ns.enum("CrossbarConfig")
+CROSSBAR_CONFIGS = {
+    CROSSBAR_LEFT_TO_AMP_LEFT: 1 << 0,
+    CROSSBAR_RIGHT_TO_AMP_LEFT: 1 << 1,
+    CROSSBAR_MONO_TO_AMP_LEFT: 1 << 2,
+    CROSSBAR_LEFT_TO_AMP_RIGHT: 1 << 3,
+    CROSSBAR_RIGHT_TO_AMP_RIGHT: 1 << 4,
+    CROSSBAR_MONO_TO_AMP_RIGHT: 1 << 5,
+    CROSSBAR_LEFT_TO_I2S_LEFT: 1 << 6,
+    CROSSBAR_RIGHT_TO_I2S_LEFT: 1 << 7,
+    CROSSBAR_MONO_TO_I2S_LEFT: 1 << 8,
+    CROSSBAR_LEFT_TO_I2S_RIGHT: 1 << 9,
+    CROSSBAR_RIGHT_TO_I2S_RIGHT: 1 << 10,
+    CROSSBAR_MONO_TO_I2S_RIGHT: 1 << 11
+}
+
 
 CONFIG_SCHEMA = cv.All(
     cv.Schema(
@@ -98,30 +101,30 @@ CONFIG_SCHEMA = cv.All(
             cv.GenerateID(): cv.declare_id(Tas5805mComponent),
             cv.Required(CONF_ENABLE_PIN): pins.gpio_output_pin_schema,
             cv.Optional(CONF_ANALOG_GAIN, default="-15.5dB"): cv.All(
-                        cv.decibel, cv.one_of(*ANALOG_GAINS)
+                cv.decibel, cv.one_of(*ANALOG_GAINS)
             ),
             cv.Optional(CONF_DAC_MODE, default="BTL"): cv.enum(
-                        DAC_MODES, upper=True
+                DAC_MODES, upper=True
             ),
             cv.Optional(CONF_IGNORE_FAULT, default="CLOCK_FAULT"): cv.enum(
-                        EXCLUDE_IGNORE_MODES, upper=True
+                EXCLUDE_IGNORE_MODES, upper=True
             ),
             cv.Optional(CONF_MIXER_MODE, default="STEREO"): cv.enum(
-                        MIXER_MODES, upper=True
+                MIXER_MODES, upper=True
             ),
             cv.Optional(CONF_CROSSOVER_FREQUENCY, default="-1Hz"): cv.All(
                 cv.frequency, cv.int_range(0, 25000)
             ),
             cv.Optional(CONF_REFRESH_EQ, default="BY_GAIN"): cv.enum(
-                        AUTO_REFRESH_MODES, upper=True
+                AUTO_REFRESH_MODES, upper=True
             ),
             cv.Optional(CONF_VOLUME_MAX, default="24dB"): cv.All(
-                        cv.decibel, cv.int_range(-103, 24)
+                cv.decibel, cv.int_range(-103, 24)
             ),
             cv.Optional(CONF_VOLUME_MIN, default="-103dB"): cv.All(
-                        cv.decibel, cv.int_range(-103, 24)
+                cv.decibel, cv.int_range(-103, 24)
             ),
-            cv.Optional(CONF_CROSSBAR): CrossbarSchema
+            cv.Optional(CONF_CROSSBAR): cv.Schema({cv.Optional(name, default="false"): cv.boolean for name in CROSSBAR_CONFIGS})
         }
     )
     .extend(cv.polling_component_schema("1s"))
@@ -129,6 +132,7 @@ CONFIG_SCHEMA = cv.All(
     .add_extra(validate_config),
     cv.only_on_esp32,
 )
+
 
 async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
@@ -141,6 +145,10 @@ async def to_code(config):
     cg.add(var.config_ignore_fault_mode(config[CONF_IGNORE_FAULT]))
     cg.add(var.config_mixer_mode(config[CONF_MIXER_MODE]))
     cg.add(var.config_crossover_frequency(config[CONF_CROSSOVER_FREQUENCY]))
+    for k, v in config[CONF_CROSSBAR]:
+        enum_val = CROSSBAR_CONFIGS[k]
+        cg.add(var.config_crossbar_flag(enum_val, v))
+
     cg.add(var.config_crossbar(config[CONF_CROSSBAR]))
     cg.add(var.config_refresh_eq(config[CONF_REFRESH_EQ]))
     cg.add(var.config_volume_max(config[CONF_VOLUME_MAX]))
