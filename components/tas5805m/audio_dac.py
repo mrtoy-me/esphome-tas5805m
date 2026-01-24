@@ -75,33 +75,33 @@ def validate_config(config):
     return config
 
 
-CROSSBAR_LEFT_TO_AMP_LEFT = "l_to_amp_l",
-CROSSBAR_RIGHT_TO_AMP_LEFT = "r_to_amp_l"
-CROSSBAR_MONO_TO_AMP_LEFT = "mono_to_amp_l"
-CROSSBAR_LEFT_TO_AMP_RIGHT = "l_to_amp_r"
-CROSSBAR_RIGHT_TO_AMP_RIGHT = "r_to_amp_r"
-CROSSBAR_MONO_TO_AMP_RIGHT = "mono_to_amp_r"
-CROSSBAR_LEFT_TO_I2S_LEFT = "left_to_i2s_l"
-CROSSBAR_RIGHT_TO_I2S_LEFT = "right_to_i2s_l"
-CROSSBAR_MONO_TO_I2S_LEFT = "mono_to_i2s_l"
-CROSSBAR_LEFT_TO_I2S_RIGHT = "l_to_i2s_r"
-CROSSBAR_RIGHT_TO_I2S_RIGHT = "r_to_i2s_r"
-CROSSBAR_MONO_TO_I2S_RIGHT = "mono_to_i2s_r"
+CONF_CROSSBAR_LEFT_TO_AMP_LEFT = "l_to_amp_l"
+CONF_CROSSBAR_RIGHT_TO_AMP_LEFT = "r_to_amp_l"
+CONF_CROSSBAR_MONO_TO_AMP_LEFT = "mono_to_amp_l"
+CONF_CROSSBAR_LEFT_TO_AMP_RIGHT = "l_to_amp_r"
+CONF_CROSSBAR_RIGHT_TO_AMP_RIGHT = "r_to_amp_r"
+CONF_CROSSBAR_MONO_TO_AMP_RIGHT = "mono_to_amp_r"
+CONF_CROSSBAR_LEFT_TO_I2S_LEFT = "l_to_i2s_l"
+CONF_CROSSBAR_RIGHT_TO_I2S_LEFT = "r_to_i2s_l"
+CONF_CROSSBAR_MONO_TO_I2S_LEFT = "mono_to_i2s_l"
+CONF_CROSSBAR_LEFT_TO_I2S_RIGHT = "l_to_i2s_r"
+CONF_CROSSBAR_RIGHT_TO_I2S_RIGHT = "r_to_i2s_r"
+CONF_CROSSBAR_MONO_TO_I2S_RIGHT = "mono_to_i2s_r"
 
 CrossBar = tas5805m_ns.enum("CrossbarConfig")
 CROSSBAR_CONFIGS = {
-    CROSSBAR_LEFT_TO_AMP_LEFT: 1 << 0,
-    CROSSBAR_RIGHT_TO_AMP_LEFT: 1 << 1,
-    CROSSBAR_MONO_TO_AMP_LEFT: 1 << 2,
-    CROSSBAR_LEFT_TO_AMP_RIGHT: 1 << 3,
-    CROSSBAR_RIGHT_TO_AMP_RIGHT: 1 << 4,
-    CROSSBAR_MONO_TO_AMP_RIGHT: 1 << 5,
-    CROSSBAR_LEFT_TO_I2S_LEFT: 1 << 6,
-    CROSSBAR_RIGHT_TO_I2S_LEFT: 1 << 7,
-    CROSSBAR_MONO_TO_I2S_LEFT: 1 << 8,
-    CROSSBAR_LEFT_TO_I2S_RIGHT: 1 << 9,
-    CROSSBAR_RIGHT_TO_I2S_RIGHT: 1 << 10,
-    CROSSBAR_MONO_TO_I2S_RIGHT: 1 << 11
+    CONF_CROSSBAR_LEFT_TO_AMP_LEFT: 1 << 0,
+    CONF_CROSSBAR_RIGHT_TO_AMP_LEFT: 1 << 1,
+    CONF_CROSSBAR_MONO_TO_AMP_LEFT: 1 << 2,
+    CONF_CROSSBAR_LEFT_TO_AMP_RIGHT: 1 << 3,
+    CONF_CROSSBAR_RIGHT_TO_AMP_RIGHT: 1 << 4,
+    CONF_CROSSBAR_MONO_TO_AMP_RIGHT: 1 << 5,
+    CONF_CROSSBAR_LEFT_TO_I2S_LEFT: 1 << 6,
+    CONF_CROSSBAR_RIGHT_TO_I2S_LEFT: 1 << 7,
+    CONF_CROSSBAR_MONO_TO_I2S_LEFT: 1 << 8,
+    CONF_CROSSBAR_LEFT_TO_I2S_RIGHT: 1 << 9,
+    CONF_CROSSBAR_RIGHT_TO_I2S_RIGHT: 1 << 10,
+    CONF_CROSSBAR_MONO_TO_I2S_RIGHT: 1 << 11
 }
 
 
@@ -125,7 +125,7 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(CONF_MONO_MIXER_MODE, default="STEREO"): cv.enum(
                 MONO_MIXER_MODES, upper=True
             ),
-            cv.Optional(CONF_CROSSOVER_FREQUENCY, default="-1Hz"): cv.All(
+            cv.Optional(CONF_CROSSOVER_FREQUENCY, default="0Hz"): cv.All(
                 cv.frequency, cv.int_range(0, 25000)
             ),
             cv.Optional(CONF_REFRESH_EQ, default="BY_GAIN"): cv.enum(
@@ -159,9 +159,10 @@ async def to_code(config):
     cg.add(var.config_mixer_mode(config[CONF_MIXER_MODE]))
     cg.add(var.config_mono_mixer_mode(config[CONF_MONO_MIXER_MODE]))
     cg.add(var.config_crossover_frequency(config[CONF_CROSSOVER_FREQUENCY]))
-    for k, v in config[CONF_CROSSBAR]:
-        enum_val = CROSSBAR_CONFIGS[k]
-        cg.add(var.config_crossbar_flag(enum_val, v))
+    if CONF_CROSSBAR in config:
+        for k, v in config[CONF_CROSSBAR].items():
+            enum_val = CROSSBAR_CONFIGS[k]
+            cg.add(var.config_crossbar_flag(enum_val, v))
     cg.add(var.config_refresh_eq(config[CONF_REFRESH_EQ]))
     cg.add(var.config_volume_max(config[CONF_VOLUME_MAX]))
     cg.add(var.config_volume_min(config[CONF_VOLUME_MIN]))

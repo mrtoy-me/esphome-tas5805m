@@ -54,7 +54,7 @@ namespace esphome::tas5805m {
 
         void config_crossover_frequency(float crossover_frequency) { this->tas5805m_crossover_freq_ = crossover_frequency; }
 
-        void config_crossbar_flag(const CrossbarConfig flag, bool enable) {
+        void config_crossbar_flag(const int flag, bool enable) {
             if (enable) {
                 this->tas5805m_crossbar_config_ = static_cast<CrossbarConfig>(this->tas5805m_crossbar_config_ | flag);
             } else {

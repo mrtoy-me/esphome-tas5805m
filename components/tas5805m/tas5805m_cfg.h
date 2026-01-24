@@ -83,6 +83,7 @@ namespace esphome::tas5805m {
     // Mixer registers
     static constexpr uint8_t TAS5805M_REG_BOOK_5 = 0x8C;
     static constexpr uint8_t TAS5805M_REG_BOOK_5_MIXER_PAGE = 0x29;
+    static constexpr uint8_t TAS5805M_REG_BOOK_5_CROSSBAR_PAGE = 0x2C;
     static constexpr uint8_t TAS5805M_REG_LEFT_TO_LEFT_GAIN = 0x18;
     static constexpr uint8_t TAS5805M_REG_RIGHT_TO_LEFT_GAIN = 0x1C;
     static constexpr uint8_t TAS5805M_REG_LEFT_TO_RIGHT_GAIN = 0x20;
@@ -124,6 +125,6 @@ namespace esphome::tas5805m {
         MONO_MIXER_MODE_EQ_LEFT,
         MONO_MIXER_MODE_EQ_RIGHT,
       };
-    static constexpr auto MONO_MIXER_MODE_TEXT[] = {"LEFT", "RIGHT", "STEREO", "EQ_LEFT", "EQ_RIGHT"};
+    static const char* MONO_MIXER_MODE_TEXT[] = {"LEFT", "RIGHT", "STEREO", "EQ_LEFT", "EQ_RIGHT"};
 
 } // namespace esphome::tas5805m

@@ -1,8 +1,8 @@
 #include "tas5805m.h"
 #include "tas5805m_minimal.h"
 #include "tas5805m_eq.h"
-#include "eq/biquad.h"
-#include "eq/butterworth2.h"
+#include "biquad.h"
+#include "butterworth2.h"
 #include "esphome/core/log.h"
 #include "esphome/core/helpers.h"
 #include "esphome/core/hal.h"
@@ -140,6 +140,10 @@ namespace esphome::tas5805m {
                 this->settings_refresh_state_ = SET_CROSSOVER_FREQUENCY;
                 break;
             case SET_CROSSOVER_FREQUENCY:
+                if (this->tas5805m_crossover_freq_ == 0) {
+                    this->settings_refresh_state_ = SET_CROSSBAR;
+                    return;
+                }
                 if (!this->set_crossover_f(this->tas5805m_crossover_freq_)) {
                     ESP_LOGW(TAG, "%ssetting Crossover Frequency", ERROR);
                 };
@@ -762,16 +766,16 @@ bool Tas5805mComponent::get_eq_(bool* enabled) {
 
 
     bool Tas5805mComponent::set_crossbar_(CrossbarConfig config) {
-        if (!this->set_book_and_page_(TAS5805M_REG_BOOK_5, TAS5805M_REG_BOOK_5_MIXER_PAGE)) {
+        if (!this->set_book_and_page_(TAS5805M_REG_BOOK_5, TAS5805M_REG_BOOK_5_CROSSBAR_PAGE)) {
             ESP_LOGE(TAG, "%s begin Set %s", ERROR, CROSSBAR);
             return false;
         }
         for (int i = 0; i < CROSSBAR_CONFIG_COUNT; i++) {
-            uint8_t writeValue = TAS5805M_CROSSBAR_VALUE_MUTE;
+            uint32_t writeValue = TAS5805M_CROSSBAR_VALUE_MUTE;
             if (config & (1 << i)) {
                 writeValue = TAS5805M_CROSSBAR_VALUE_0DB;
             }
-            if (!this->tas5805m_write_bytes_(TAS5805M_REG_OUTPUT_CROSSBAR_BEGINNING + i * 4, &writeValue, 4)) {
+            if (!this->tas5805m_write_bytes_(TAS5805M_REG_OUTPUT_CROSSBAR_BEGINNING + i * 4, reinterpret_cast<uint8_t *>(&writeValue), 4)) {
                 ESP_LOGE(TAG, "%s Output Crossbar Value %d", ERROR, i);
                 return false;
             }
@@ -791,10 +795,9 @@ bool Tas5805mComponent::get_eq_(bool* enabled) {
     bool Tas5805mComponent::set_crossover_f(float crossover_frequency) {
         constexpr uint8_t SUBEQ_PAGE = 0x29;
         constexpr uint8_t SUBEQ_BQ1L_REG = 0x38;
-        constexpr uint8_t SUBEQ_SAMPLE_RATE = 20000;
-        // PPC3 computes coefficients for a sample rate of 20kHz. Is this always correct?
+        constexpr double SUBEQ_SAMPLE_RATE = 48000;
 
-        auto biquad = butterworth2_tas5805m(SUBEQ_SAMPLE_RATE, crossover_frequency, BUTTERWORTH2_LOWPASS);
+        auto biquad = butterworth2_tas5805m(SUBEQ_SAMPLE_RATE, crossover_frequency, Butterworth2Type::LOWPASS);
 
         if (!tas5805m_paged_write(TAS5805M_REG_BOOK_EQ, SUBEQ_PAGE, SUBEQ_BQ1L_REG,
                                   reinterpret_cast<uint8_t *>(&biquad), sizeof(biquad))) {
