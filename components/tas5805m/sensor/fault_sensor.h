@@ -4,8 +4,7 @@
 #include "esphome/core/component.h"
 #include "../tas5805m.h"
 
-namespace esphome {
-namespace tas5805m {
+namespace esphome::tas5805m {
 
 class FaultSensor : public PollingComponent, public Parented<Tas5805mComponent> {
  public:
@@ -19,8 +18,7 @@ class FaultSensor : public PollingComponent, public Parented<Tas5805mComponent> 
   sensor::Sensor* times_faults_cleared_sensor_{nullptr};
 
   // initialise as large number so first value of first update interval is saved
-  uint32_t last_faults_cleared_{1000}; // large number so first value of first update interval is saved
+  uint32_t last_faults_cleared_{100000};
 };
 
-}  // namespace tas5805m
-}  // namespace esphome
+}  // namespace esphome::tas5805m

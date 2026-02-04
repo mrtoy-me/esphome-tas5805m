@@ -144,11 +144,13 @@ Configuration required to be included under **esphome:** YAML:
 on_boot:
     priority: 220.0
     then:
-      media_player.speaker.play_on_device_media_file: startup_sync_sound
+      media_player.play_media:
+        id: external_media_player # speaker media player id
+        media_url: file://startup_sync_sound
 ```
 The **audio_dac:** has an optional configuration variable called **refresh_eq:**
 The default configuration of **refresh_eq: BY_GAIN** matches the above use case and
-therefore is not required(can be omitted) from the **audio_dac:** YAML configuration.
+therefore can be omitted from the **audio_dac:** YAML configuration.
 
 ## Use Case where Speaker Mediaplayer is not used (eg using a SnapCast client component)
 Another use case, is use of Snapcast client component instead of Speaker Mediaplayer component
@@ -175,7 +177,7 @@ switch:
 
 ## Audio Dac
 
-Example typical configuration:
+Example configuration:
 ```
 audio_dac:
   - platform: tas5805m
@@ -186,34 +188,32 @@ audio_dac:
     mixer_mode: STEREO
     volume_max: 0dB
     volume_min: -60db
-    update_interval: 4s
+    ignore_fault: CLOCK_FAULT
+    update_interval: 1s
 ```
 Configuration variables:
-- **enable_pin:** (*Required*): GPIOxx, enable pin of ESP32 Louder
+- **enable_pin:** (*Required*): GPIOxx, enable pin of ESP32 Louder.
 
-- **analog_gain:** (*Optional*): dB values from -15.5dB to 0dB in 0.5dB increments
-  Defaults to -15.5dbB. A setting of -15.5db is typical when
-  5v is used to power the Louder
+- **analog_gain:** (*Optional*): dB values from -15.5dB to 0dB in 0.5dB increments.
+  Defaults to -15.5dbB. A setting of -15.5db is typical when 5v is used to power the Louder.
 
-- **dac_mode:** (*Optional*): valid values BTL or PBTL. Defaults to BTL
+- **dac_mode:** (*Optional*): valid values BTL or PBTL. Defaults to BTL.
 
 - **mixer_mode:** (*Optional*): values STEREO, INVERSE_STEREO, MONO, LEFT or RIGHT
   Defaults to STEREO. Note: for PBTL Dac Mode, only MONO, LEFT or RIGHT are valid.
 
-- **volume_max:** (*Optional*): whole dB values from -103dB to 24dB. Defaults to 24dB
+- **volume_max:** (*Optional*): whole dB values from -103dB to 24dB. Defaults to 24dB.
 
-- **volume_min:** (*Optional*): whole dB values from -103dB to 24dB. Defaults to -103dB
+- **volume_min:** (*Optional*): whole dB values from -103dB to 24dB. Defaults to -103dB.
+
+- **ignore_fault:** (*Optional*): Valid options are **CLOCK_FAULT** and **NONE**. Default is **CLOCK_FAULT**.
+  That is, by default clock faults are ignored when determining if TAS5805M fault registers require clearing. To trigger clearing of fault registers on any fault condition, specify **ignore_fault: NONE**
+
+- **refresh_eq:** (*Optional*): valid values **BY_GAIN** or **BY_SWITCH**. Default is **BY_GAIN**.
+  This setting is not required if you are using Speaker Mediaplayer component as the default matches this use case. The setting is mainly intended when the Snapcast client component is used instead of Speaker Mediaplayer. When a Snapcast client component is configured, the BY_SWITCH setting should be used. See information under "Activation of Mixer mode and EQ Gains" section above and the provided YAML examples.
 
 - **update_interval:** (*Optional*): defines the interval (seconds) at which faults will be
-  checked and then if detected will be cleared. Defaults to 4s. For ESP32-S3 Louder, update 
-  interval can be reduced as low as 1s.
-
-- **refresh_eq:** (*Optional*): valid values BY_GAIN or BY_SWITCH. Defaults to BY_GAIN
-  This setting can normally be ignored and omitted if you are using Speaker
-  Mediaplayer component and is intended for use when Snapcast client component
-  is used instead of Speaker Mediaplayer. When a Snapcast client component is
-  configured, the BY_SWITCH value should be used. See information under
-  "Activation of Mixer mode and EQ Gains" section above and provided YAML examples.
+  checked and then if detected, the clearing of the TAS5805M fault registers will occur at next interval. Defaults to 1s. **Note:** update interval cannot be reduced below 1s.
 
 
 ## Switches
@@ -231,7 +231,7 @@ for the defined time and when music player activity is detected (by mediaplayer)
 the Enable Louder Switch is triggered On. The example interval configuration also
 requires configuration of **mediaplayer:** which is also shown in the YAML examples.
 
-Configuration of tas5805m switches in typical use case:
+Configuration of tas5805m platform Switches in typical use case:
 
 ```switch:
   - platform: tas5805m
@@ -247,13 +247,15 @@ Configuration headers:
 - **enable_dac:** (*Optional*): allows the definition of a switch to enable/disable
   the TAS5805M DAC. Switch On (enabled) places TAS5805M into Play mode while
   Switch Off (disabled) places TAS5805M into low power Sleep mode.
-    Configuration variables:
+
+  Configuration variables:
     - **restore_mode:** (optional but recommended): **ALWAYS_ON** is recommended.
 
 - **enable_eq:** (*Optional*): allows the definition of a switch to turn on/off
   the TAS5805M DAC EQ Control Mode. Switch On enables TAS5805M EQ Control while
   Switch Off disables TAS5805M EQ Control.
-    Configuration variables:
+
+  Configuration variables:
     - **restore_mode:** (optional but recommended): **RESTORE_DEFAULT_ON** is
       recommended for typical use case where speaker mediaplayer is use for audio.
       For use case, where SnapCast client component is used instead of
@@ -261,12 +263,13 @@ Configuration headers:
 
 ## EQ Band Gain Numbers
 15 EQ Band Gain Numbers can be configured for controlling the gain of each EQ Band
-in Homeassistant. The number configuration heading for each number is shown below
-with an example name configured. Defining **number: -platform: tas5805m** requires
+in Home Assistant. The number configuration heading for each number is shown below
+with an example name. Defining **number: -platform: tas5805m** requires
 all 15 EQ Gain Band headings to be configured. For TAS5805M EQ Band Gains to
 configure correctly requires some addition YAML configuration, refer to the
-"Activation of Mixer mode and EQ Gains" section above and provided YAML examples.
+"Activation of Mixer mode and EQ Gains" section above and the provided YAML examples.
 
+Example configuration of tas5805m platform (Band Gain) Numbers:
 ```
 number:
   - platform: tas5805m
@@ -315,16 +318,29 @@ Binary sensors can be configured which correspond to fault codes from the TAS580
 The tas5805m binary sensor platform has configuration headings for each binary sensor
 as shown below with an example name configured.
 All 12 binary sensors can be optionally defined but it is recommended that at minimum,
-one binary sensor **have_fault:** is configured. The **have_fault:** binary sensor
-activates if any the TAS5805M faults conditions activate.
-Note: binary sensors are updated at the **update interval:** defined under **audio_dac:** or
-if not defined default to 30s.
+one binary sensor **have_fault:** is configured.
 
+**have_fault:** Configuration variable:
+  - The **have_fault:** binary sensor turns ON if any TAS5805M faults conditions are ON, however note that by default clock faults are excluded.
+
+    Configuration variables:
+    - **exclude:** (optional): Allows excluding defined faults from have_fault binary sensor.
+      Valid options are **NONE** and **CLOCK_FAULT**. Default is **CLOCK_FAULT** which excludes clock faults from **have_fault** binary sensor. To include all faults, specify **exclude: NONE**.
+      Excluding clock faults by default is implemented since a clock fault is essentially a warning about unexpected behavior of the I2S clock and Esphome idf mediaplayers generate clock faults because I2S is manipulated to guarentee timing.
+
+**over_temp_warning:**
+  - To attempt to mitigate an over temperature upon receiving a over temperature, the volume can be decreased using **interval:**
+    The "..._louder_idf_media.yaml" examples provide example configuration. For this YAML to take effect, the **mediaplayer:**  configuration must include configuration of the **volume_increment:**. Typically 5-10% should be suitable but depends on the dB range defined by the **volume_max:** and **volume_min:** under **audio_dac:**. The % equivalent to around 6dB decrease
+    should have a benficial effect, but also depends on the update interval for checking faults.
+    **Note:** all binary sensors are updated at the **update interval:** defined under **audio_dac:**
+
+Example configuration of tas5805m platform Binary Sensors:
 ```
 binary_sensor:
   - platform: tas5805m
     have_fault:
       name: Any Faults
+      exclude: CLOCK_FAULT
     left_channel_dc_fault:
       name: Left Channel DC Fault
     right_channel_dc_fault:
@@ -347,12 +363,11 @@ binary_sensor:
       name: Over Temperature Shutdown Fault
     over_temp_warning:
       name: Over Temperature Warning
+      id: over_temperature_warning
 ```
 
 ## Sensor
-Under the tas5805m sensor platform, one sensor under configuration heading
-**faults_cleared:** can be optionally configured. This sensor counts the
-number of times a fault was detected and subsequently cleared by the component.
+One tas5805m platform sensor can be defined configuration heading **faults_cleared:** can be optionally configured. This sensor counts the number of times a fault was detected and subsequently cleared by the component.
 ```
 sensor:
   - platform: tas5805m
@@ -360,8 +375,7 @@ sensor:
       name: "Times Faults Cleared"
 ```
 Configuration variables:
-- **update interval:** (*Optional*): The interval at which the sensor is updated.
-  Defaults to 60s
+- **update interval:** (*Optional*): The interval at which the sensor is updated. Defaults to 60s.
 
 
 # YAML examples in this Repository

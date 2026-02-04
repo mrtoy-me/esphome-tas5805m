@@ -13,12 +13,12 @@ CODEOWNERS = ["@mrtoy-me"]
 DEPENDENCIES = ["i2c"]
 
 CONF_ANALOG_GAIN = "analog_gain"
-CONF_REFRESH_EQ = "refresh_eq"
 CONF_DAC_MODE = "dac_mode"
+CONF_IGNORE_FAULT = "ignore_fault"
 CONF_MIXER_MODE = "mixer_mode"
+CONF_REFRESH_EQ = "refresh_eq"
 CONF_VOLUME_MIN = "volume_min"
 CONF_VOLUME_MAX = "volume_max"
-
 CONF_TAS5805M_ID = "tas5805m_id"
 
 tas5805m_ns = cg.esphome_ns.namespace("tas5805m")
@@ -36,8 +36,12 @@ DAC_MODES = {
     "PBTL": DacMode.PBTL,
 }
 
+ExcludeIgnoreMode = tas5805m_ns.enum("ExcludeIgnoreModes")
+EXCLUDE_IGNORE_MODES = {
+     "NONE"        : ExcludeIgnoreMode.NONE,
+     "CLOCK_FAULT" : ExcludeIgnoreMode.CLOCK_FAULT,
+}
 MixerMode = tas5805m_ns.enum("MixerMode")
-
 MIXER_MODES = {
     "STEREO"         : MixerMode.STEREO,
     "STEREO_INVERSE" : MixerMode.STEREO_INVERSE,
@@ -64,14 +68,17 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(CONF_ANALOG_GAIN, default="-15.5dB"): cv.All(
                         cv.decibel, cv.one_of(*ANALOG_GAINS)
             ),
-            cv.Optional(CONF_REFRESH_EQ, default="BY_GAIN"): cv.enum(
-                        AUTO_REFRESH_MODES, upper=True
-            ),
             cv.Optional(CONF_DAC_MODE, default="BTL"): cv.enum(
                         DAC_MODES, upper=True
             ),
+            cv.Optional(CONF_IGNORE_FAULT, default="CLOCK_FAULT"): cv.enum(
+                        EXCLUDE_IGNORE_MODES, upper=True
+            ),
             cv.Optional(CONF_MIXER_MODE, default="STEREO"): cv.enum(
                         MIXER_MODES, upper=True
+            ),
+            cv.Optional(CONF_REFRESH_EQ, default="BY_GAIN"): cv.enum(
+                        AUTO_REFRESH_MODES, upper=True
             ),
             cv.Optional(CONF_VOLUME_MAX, default="24dB"): cv.All(
                         cv.decibel, cv.int_range(-103, 24)
@@ -81,10 +88,10 @@ CONFIG_SCHEMA = cv.All(
             ),
         }
     )
-    .extend(cv.polling_component_schema("4s"))
+    .extend(cv.polling_component_schema("1s"))
     .extend(i2c.i2c_device_schema(0x2D))
     .add_extra(validate_config),
-    cv.only_with_esp_idf,
+    cv.only_on_esp32,
 )
 
 async def to_code(config):
@@ -94,8 +101,9 @@ async def to_code(config):
     enable = await cg.gpio_pin_expression(config[CONF_ENABLE_PIN])
     cg.add(var.set_enable_pin(enable))
     cg.add(var.config_analog_gain(config[CONF_ANALOG_GAIN]))
-    cg.add(var.config_auto_refresh(config[CONF_REFRESH_EQ]))
     cg.add(var.config_dac_mode(config[CONF_DAC_MODE]))
+    cg.add(var.config_ignore_fault_mode(config[CONF_IGNORE_FAULT]))
     cg.add(var.config_mixer_mode(config[CONF_MIXER_MODE]))
+    cg.add(var.config_refresh_eq(config[CONF_REFRESH_EQ]))
     cg.add(var.config_volume_max(config[CONF_VOLUME_MAX]))
     cg.add(var.config_volume_min(config[CONF_VOLUME_MIN]))

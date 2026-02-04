@@ -1,13 +1,13 @@
 #include "esphome/core/log.h"
 #include "fault_sensor.h"
 
-namespace esphome {
-namespace tas5805m {
+namespace esphome::tas5805m {
 
 static const char *const TAG = "tas5805m.sensor";
 
 void  FaultSensor::dump_config() {
-  LOG_SENSOR("", "Tas5805m Times Faults Cleared sensor:", this->times_faults_cleared_sensor_);
+  ESP_LOGCONFIG(TAG, "Tas5805m Sensor:");
+  LOG_SENSOR("  ", "Times Faults Cleared", this->times_faults_cleared_sensor_);
   LOG_UPDATE_INTERVAL(this);
 }
 
@@ -22,5 +22,4 @@ void  FaultSensor::update() {
   }
 }
 
-}  // namespace tas5805m
-}  // namespace esphome
+}  // namespace esphome::tas5805m
