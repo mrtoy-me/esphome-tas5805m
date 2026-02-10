@@ -409,24 +409,23 @@ bool Tas5805mComponent::set_eq_gain(uint8_t band, int8_t gain) {
 }
 #endif
 
-    bool Tas5805mComponent::set_mute_off() {
-        if (!this->is_muted_) return true;
-        if (!this->tas5805m_write_byte_(TAS5805M_DEVICE_CTRL_2, this->tas5805m_control_state_)) return false;
-        this->is_muted_ = false;
-        ESP_LOGD(TAG, "Mute Off");
-        return true;
-    }
+bool Tas5805mComponent::set_mute_off() {
+  if (!this->is_muted_) return true;
+  if (!this->tas5805m_write_byte_(TAS5805M_DEVICE_CTRL_2, this->tas5805m_control_state_)) return false;
+  this->is_muted_ = false;
+  ESP_LOGV(TAG, "Mute Off");
+  return true;
+}
 
-    // set bit 3 MUTE in TAS5805M_DEVICE_CTRL_2 and retain current Control State
-    // ensures get_state = get_power_state
-    bool Tas5805mComponent::set_mute_on() {
-        if (this->is_muted_) return true;
-        if (!this->tas5805m_write_byte_(TAS5805M_DEVICE_CTRL_2, this->tas5805m_control_state_ + TAS5805M_MUTE_CONTROL))
-            return false;
-        this->is_muted_ = true;
-        ESP_LOGD(TAG, "Mute On");
-        return true;
-    }
+// set bit 3 MUTE in TAS5805M_DEVICE_CTRL_2 and retain current Control State
+// ensures get_state = get_power_state
+bool Tas5805mComponent::set_mute_on() {
+  if (this->is_muted_) return true;
+  if (!this->tas5805m_write_byte_(TAS5805M_DEVICE_CTRL_2, this->tas5805m_control_state_ + TAS5805M_MUTE_CONTROL)) return false;
+  this->is_muted_ = true;
+  ESP_LOGV(TAG, "Mute On");
+  return true;
+}
 
     // used by 'enable_eq_switch' and 'eq_gain_band16000hz'
     void Tas5805mComponent::refresh_settings() {
@@ -464,17 +463,18 @@ bool Tas5805mComponent::set_eq_gain(uint8_t band, int8_t gain) {
         uint8_t raw_volume;
         this->get_digital_volume_(&raw_volume);
 
-        return remap<float, uint8_t>(raw_volume, this->tas5805m_raw_volume_min_,
-                                     this->tas5805m_raw_volume_max_,
-                                     0.0f, 1.0f);
-    }
-
-    bool Tas5805mComponent::set_volume(float volume) {
-        float new_volume = clamp(volume, 0.0f, 1.0f);
-        uint8_t raw_volume = remap<uint8_t, float>(new_volume, 0.0f, 1.0f,
-                                                   this->tas5805m_raw_volume_min_,
-                                                   this->tas5805m_raw_volume_max_);
-        if (!this->set_digital_volume_(raw_volume)) return false;
+bool Tas5805mComponent::set_volume(float volume) {
+  float new_volume = clamp(volume, 0.0f, 1.0f);
+  uint8_t raw_volume = remap<uint8_t, float>(new_volume, 0.0f, 1.0f,
+                                                         this->tas5805m_raw_volume_min_,
+                                                         this->tas5805m_raw_volume_max_);
+  if (!this->set_digital_volume_(raw_volume)) return false;
+  #if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERBOSE
+    int8_t dB = -(raw_volume / 2) + 24;
+    ESP_LOGV(TAG, "Volume: %idB", dB);
+  #endif
+  return true;
+}
 
         int8_t dB = -(raw_volume / 2) + 24;
         ESP_LOGD(TAG, "Volume: %idB", dB);
@@ -546,18 +546,13 @@ bool Tas5805mComponent::set_eq_gain(uint8_t band, int8_t gain) {
         return true;
     }
 
-    bool Tas5805mComponent::set_deep_sleep_off_() {
-        if (this->tas5805m_control_state_ != CTRL_DEEP_SLEEP) return true; // already not in deep sleep
-        // preserve mute state
-        uint8_t new_value = (this->is_muted_) ? (CTRL_PLAY + TAS5805M_MUTE_CONTROL) : CTRL_PLAY;
-        if (!this->tas5805m_write_byte_(TAS5805M_DEVICE_CTRL_2, new_value)) return false;
-
-        this->tas5805m_control_state_ = CTRL_PLAY; // set Control State to play
-        ESP_LOGD(TAG, "Deep Sleep Off");
-        if (this->is_muted_)
-            ESP_LOGD(TAG, "Mute On preserved");
-        return true;
-    }
+  this->tas5805m_control_state_ = CTRL_PLAY;                        // set Control State to play
+  ESP_LOGV(TAG, "Deep Sleep Off");
+  #if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERBOSE
+  if (this->is_muted_) ESP_LOGV(TAG, "Mute On preserved");
+  #endif
+  return true;
+}
 
     bool Tas5805mComponent::set_deep_sleep_on_() {
         if (this->tas5805m_control_state_ == CTRL_DEEP_SLEEP) return true; // already in deep sleep
@@ -566,12 +561,13 @@ bool Tas5805mComponent::set_eq_gain(uint8_t band, int8_t gain) {
         uint8_t new_value = (this->is_muted_) ? (CTRL_DEEP_SLEEP + TAS5805M_MUTE_CONTROL) : CTRL_DEEP_SLEEP;
         if (!this->tas5805m_write_byte_(TAS5805M_DEVICE_CTRL_2, new_value)) return false;
 
-        this->tas5805m_control_state_ = CTRL_DEEP_SLEEP; // set Control State to deep sleep
-        ESP_LOGD(TAG, "Deep Sleep On");
-        if (this->is_muted_)
-            ESP_LOGD(TAG, "Mute On preserved");
-        return true;
-    }
+  this->tas5805m_control_state_ = CTRL_DEEP_SLEEP;                   // set Control State to deep sleep
+  ESP_LOGV(TAG, "Deep Sleep On");
+  #if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERBOSE
+  if (this->is_muted_) ESP_LOGD(TAG, "Mute On preserved");
+  #endif
+  return true;
+}
 
     bool Tas5805mComponent::get_digital_volume_(uint8_t *raw_volume) {
         uint8_t current = 254; // lowest raw volume
@@ -609,112 +605,71 @@ bool Tas5805mComponent::get_eq_(bool* enabled) {
   if (!this->tas5805m_eq_enabled_) return true;
   if (!this->tas5805m_write_byte_(TAS5805M_DSP_MISC, TAS5805M_CTRL_EQ_OFF)) return false;
   this->tas5805m_eq_enabled_ = false;
-  ESP_LOGD(TAG, "EQ control Off");
-#endif
-        return true;
-    }
+  ESP_LOGV(TAG, "EQ control Off");
+  #endif
+  return true;
+}
 
     bool Tas5805mComponent::set_eq_on_() {
 #ifdef USE_TAS5805M_EQ
   if (this->tas5805m_eq_enabled_) return true;
   if (!this->tas5805m_write_byte_(TAS5805M_DSP_MISC, TAS5805M_CTRL_EQ_ON)) return false;
   this->tas5805m_eq_enabled_ = true;
-  ESP_LOGD(TAG, "EQ control On");
-#endif
-        return true;
-    }
+  ESP_LOGV(TAG, "EQ control On");
+  #endif
+  return true;
+}
 
     bool Tas5805mComponent::get_mixer_mode_(MixerMode *mode) {
         *mode = this->tas5805m_mixer_mode_;
         return true;
     }
 
-    // only runs once from 'loop'
-    // 'mixer_mode_configured_' used by 'loop' to ensure only runs once
-    bool Tas5805mComponent::set_mixer_mode_(MixerMode mode) {
-        uint32_t mixer_l_to_l, mixer_r_to_r, mixer_l_to_r, mixer_r_to_l;
+// only runs once from 'loop'
+// 'mixer_mode_configured_' used by 'loop' to ensure only runs once
+bool Tas5805mComponent::set_mixer_mode_(MixerMode mode) {
+  uint32_t mixer_l_to_l, mixer_r_to_r, mixer_l_to_r, mixer_r_to_l;
 
-        switch (mode) {
-            case STEREO:
-                mixer_l_to_l = TAS5805M_MIXER_VALUE_0DB;
-                mixer_r_to_r = TAS5805M_MIXER_VALUE_0DB;
-                mixer_l_to_r = TAS5805M_MIXER_VALUE_MUTE;
-                mixer_r_to_l = TAS5805M_MIXER_VALUE_MUTE;
-                break;
+  switch (mode) {
+    case STEREO:
+      mixer_l_to_l = TAS5805M_MIXER_VALUE_0DB;
+      mixer_r_to_r = TAS5805M_MIXER_VALUE_0DB;
+      mixer_l_to_r = TAS5805M_MIXER_VALUE_MUTE;
+      mixer_r_to_l = TAS5805M_MIXER_VALUE_MUTE;
+      break;
 
-            case STEREO_INVERSE:
-                mixer_l_to_l = TAS5805M_MIXER_VALUE_MUTE;
-                mixer_r_to_r = TAS5805M_MIXER_VALUE_MUTE;
-                mixer_l_to_r = TAS5805M_MIXER_VALUE_0DB;
-                mixer_r_to_l = TAS5805M_MIXER_VALUE_0DB;
-                break;
+    case STEREO_INVERSE:
+      mixer_l_to_l = TAS5805M_MIXER_VALUE_MUTE;
+      mixer_r_to_r = TAS5805M_MIXER_VALUE_MUTE;
+      mixer_l_to_r = TAS5805M_MIXER_VALUE_0DB;
+      mixer_r_to_l = TAS5805M_MIXER_VALUE_0DB;
+      break;
 
-            case MONO:
-                mixer_l_to_l = TAS5805M_MIXER_VALUE_MINUS6DB;
-                mixer_r_to_r = TAS5805M_MIXER_VALUE_MINUS6DB;
-                mixer_l_to_r = TAS5805M_MIXER_VALUE_MINUS6DB;
-                mixer_r_to_l = TAS5805M_MIXER_VALUE_MINUS6DB;
-                break;
+    case MONO:
+      mixer_l_to_l = TAS5805M_MIXER_VALUE_MINUS6DB;
+      mixer_r_to_r = TAS5805M_MIXER_VALUE_MINUS6DB;
+      mixer_l_to_r = TAS5805M_MIXER_VALUE_MINUS6DB;
+      mixer_r_to_l = TAS5805M_MIXER_VALUE_MINUS6DB;
+      break;
 
-            case LEFT:
-                mixer_l_to_l = TAS5805M_MIXER_VALUE_0DB;
-                mixer_r_to_r = TAS5805M_MIXER_VALUE_MUTE;
-                mixer_l_to_r = TAS5805M_MIXER_VALUE_0DB;
-                mixer_r_to_l = TAS5805M_MIXER_VALUE_MUTE;
-                break;
+    case LEFT:
+      mixer_l_to_l = TAS5805M_MIXER_VALUE_0DB;
+      mixer_r_to_r = TAS5805M_MIXER_VALUE_MUTE;
+      mixer_l_to_r = TAS5805M_MIXER_VALUE_0DB;
+      mixer_r_to_l = TAS5805M_MIXER_VALUE_MUTE;
+      break;
 
-            case RIGHT:
-                mixer_l_to_l = TAS5805M_MIXER_VALUE_MUTE;
-                mixer_r_to_r = TAS5805M_MIXER_VALUE_0DB;
-                mixer_l_to_r = TAS5805M_MIXER_VALUE_MUTE;
-                mixer_r_to_l = TAS5805M_MIXER_VALUE_0DB;
-                break;
+    case RIGHT:
+      mixer_l_to_l = TAS5805M_MIXER_VALUE_MUTE;
+      mixer_r_to_r = TAS5805M_MIXER_VALUE_0DB;
+      mixer_l_to_r = TAS5805M_MIXER_VALUE_MUTE;
+      mixer_r_to_l = TAS5805M_MIXER_VALUE_0DB;
+      break;
 
-            default:
-                ESP_LOGD(TAG, "Invalid %s", MIXER_MODE);
-                return false;
-        }
-
-        if (!this->set_book_and_page_(TAS5805M_REG_BOOK_5, TAS5805M_REG_BOOK_5_MIXER_PAGE)) {
-            ESP_LOGE(TAG, "%s begin Set %s", ERROR, MIXER_MODE);
-            return false;
-        }
-
-        if (!this->tas5805m_write_bytes_(TAS5805M_REG_LEFT_TO_LEFT_GAIN, reinterpret_cast<uint8_t *>(&mixer_l_to_l),
-                                         4)) {
-            ESP_LOGE(TAG, "%s Mixer L-L Gain", ERROR);
-            return false;
-        }
-
-        if (!this->tas5805m_write_bytes_(TAS5805M_REG_RIGHT_TO_RIGHT_GAIN, reinterpret_cast<uint8_t *>(&mixer_r_to_r),
-                                         4)) {
-            ESP_LOGE(TAG, "%s Mixer R-R Gain", ERROR);
-            return false;
-        }
-
-        if (!this->tas5805m_write_bytes_(TAS5805M_REG_LEFT_TO_RIGHT_GAIN, reinterpret_cast<uint8_t *>(&mixer_l_to_r),
-                                         4)) {
-            ESP_LOGE(TAG, "%s Mixer L-R Gain", ERROR);
-            return false;
-        }
-
-        if (!this->tas5805m_write_bytes_(TAS5805M_REG_RIGHT_TO_LEFT_GAIN, reinterpret_cast<uint8_t *>(&mixer_r_to_l),
-                                         4)) {
-            ESP_LOGE(TAG, "%s Mixer R-L Gain", ERROR);
-            return false;
-        }
-
-        if (!this->set_book_and_page_(TAS5805M_REG_BOOK_CONTROL_PORT, TAS5805M_REG_PAGE_ZERO)) {
-            ESP_LOGE(TAG, "%s end Set %s", ERROR, MIXER_MODE);
-            return false;
-        }
-
-        // 'tas5805m_state_' global already has mixer mode from YAML config
-        // save anyway so 'set_mixer_mode' could be used more generally in future
-        this->tas5805m_mixer_mode_ = mode;
-        ESP_LOGD(TAG, "%s: %s", MIXER_MODE, MIXER_MODE_TEXT[this->tas5805m_mixer_mode_]);
-        return true;
-    }
+    default:
+      ESP_LOGW(TAG, "Invalid %s", MIXER_MODE);
+      return false;
+  }
 
     bool Tas5805mComponent::set_mono_mixer_mode_(MonoMixerMode mode) {
         static const uint8_t TAS5805M_REG_MONO_MIXER_REGISTERS_START = 0x28;
