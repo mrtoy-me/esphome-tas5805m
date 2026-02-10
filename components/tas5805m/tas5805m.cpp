@@ -64,7 +64,7 @@ bool Tas5805mComponent::configure_registers_() {
   this->number_registers_configured_ = counter;
 
   // enable Tas5805m
-  if(!this->set_deep_sleep_off_()) return false;
+  if (!this->set_deep_sleep_off_()) return false;
 
   // only setup once here
   if (!this->set_dac_mode_(this->tas5805m_dac_mode_)) return false;
@@ -160,7 +160,7 @@ void Tas5805mComponent::update() {
     uint32_t current_time = millis();
     this->update_delay_finished_ = ((current_time - this->start_time_) > INITIAL_UPDATE_DELAY);
 
-    if(!this->update_delay_finished_) return;
+    if (!this->update_delay_finished_) return;
 
     // finished delay so clear faults
     if (!this->tas5805m_write_byte_(TAS5805M_FAULT_CLEAR, TAS5805M_ANALOG_FAULT_CLEAR)) {
@@ -226,8 +226,7 @@ void Tas5805mComponent::publish_faults_() {
   // publish channel and global faults in separate loop iterations to spread component time when publishing binary sensors
   if (this->is_new_channel_fault_) {
     this->set_timeout("", 15, [this]() { this->publish_channel_faults_(); });
-  }
-  else {
+  } else {
     if (this->is_new_global_fault_) {
       this->set_timeout("", 15, [this]() { this->publish_global_faults_(); });
     }
@@ -522,9 +521,9 @@ bool Tas5805mComponent::set_dac_mode_(DacMode mode) {
 
   // Update bit 2 based on the mode
   if (mode == PBTL) {
-      current_value |= (1 << 2);  // Set bit 2 to 1 (PBTL mode)
+    current_value |= (1 << 2);  // Set bit 2 to 1 (PBTL mode)
   } else {
-      current_value &= ~(1 << 2); // Clear bit 2 to 0 (BTL mode)
+    current_value &= ~(1 << 2); // Clear bit 2 to 0 (BTL mode)
   }
   if (!this->tas5805m_write_byte_(TAS5805M_DEVICE_CTRL_1, current_value)) return false;
 
@@ -566,7 +565,7 @@ bool Tas5805mComponent::set_deep_sleep_on_() {
 
 bool Tas5805mComponent::get_digital_volume_(uint8_t* raw_volume) {
   uint8_t current = 254; // lowest raw volume
-  if(!this->tas5805m_read_byte_(TAS5805M_DIG_VOL_CTRL, &current)) return false;
+  if (!this->tas5805m_read_byte_(TAS5805M_DIG_VOL_CTRL, &current)) return false;
   *raw_volume = current;
   return true;
 }
