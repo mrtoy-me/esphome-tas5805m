@@ -17,13 +17,13 @@
 namespace esphome::tas5805m {
 
 enum AutoRefreshMode : uint8_t {
-  BY_GAIN = 0,
-  BY_SWITCH = 1,
+    BY_GAIN = 0,
+    BY_SWITCH = 1,
 };
 
 enum ExcludeIgnoreMode : uint8_t {
-  NONE = 0,
-  CLOCK_FAULT = 1,
+    NONE = 0,
+    CLOCK_FAULT = 1,
 };
 
 class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, public i2c::I2CDevice {
@@ -54,9 +54,9 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
 
     void config_crossbar_flag(const int flag, bool enable) {
       if (enable) {
-        this->tas5805m_crossbar_config_ = static_cast<CrossbarConfig>(this->tas5805m_crossbar_config_ | flag);
+          this->tas5805m_crossbar_config_ = static_cast<CrossbarConfig>(this->tas5805m_crossbar_config_ | flag);
       } else {
-        this->tas5805m_crossbar_config_ = static_cast<CrossbarConfig>(this->tas5805m_crossbar_config_ & ~flag);
+          this->tas5805m_crossbar_config_ = static_cast<CrossbarConfig>(this->tas5805m_crossbar_config_ & ~flag);
       }
     }
     void config_refresh_eq(AutoRefreshMode auto_refresh) { this->auto_refresh_ = auto_refresh; }
@@ -156,13 +156,13 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
     // low level functions
     bool set_book_and_page_(uint8_t book, uint8_t page);
 
-    bool tas5805m_read_byte_(uint8_t a_register, uint8_t* data);
+    bool tas5805m_read_byte_(uint8_t a_register, uint8_t *data);
 
-    bool tas5805m_read_bytes_(uint8_t a_register, uint8_t* data, uint8_t number_bytes);
+    bool tas5805m_read_bytes_(uint8_t a_register, uint8_t *data, uint8_t number_bytes);
 
     bool tas5805m_write_byte_(uint8_t a_register, uint8_t data);
 
-    bool tas5805m_write_bytes_(uint8_t a_register, uint8_t* data, uint8_t len);
+    bool tas5805m_write_bytes_(uint8_t a_register, uint8_t *data, uint8_t len);
 
     bool tas5805m_paged_write(uint8_t book, uint8_t page, uint8_t a_register, uint8_t *data, uint8_t len);
 
