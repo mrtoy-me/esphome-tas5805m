@@ -9,14 +9,14 @@
 
 namespace esphome::tas5805m {
 
-static const auto TAG = "tas5805m";
-static const auto ERROR = "Error ";
-static const auto MIXER_MODE = "Mixer Mode";
-static const auto CROSSBAR = "Crossbar";
-static const auto EQ_BAND = "EQ Band ";
+static const char* const TAG               = "tas5805m";
+static const char* const ERROR             = "Error ";
+static const char* const MIXER_MODE        = "Mixer Mode";
+static const char* const CROSSBAR          = "Crossbar";
+static const char* const EQ_BAND           = "EQ Band ";
 
-static constexpr uint8_t TAS5805M_MUTE_CONTROL = 0x08; // LR Channel Mute
-static constexpr uint8_t REMOVE_CLOCK_FAULT = 0xFB; // used to zero clock fault bit of global_fault1 register
+static const uint8_t TAS5805M_MUTE_CONTROL = 0x08;  // LR Channel Mute
+static const uint8_t REMOVE_CLOCK_FAULT    = 0xFB;  // used to zero clock fault bit of global_fault1 register
 
 // maximum delay allowed in "tas5805m_minimal.h" used in configure_registers()
 static const uint8_t ESPHOME_MAXIMUM_DELAY = 5; // milliseconds
@@ -43,8 +43,8 @@ void Tas5805mComponent::setup() {
   }
 
   // rescale -103db to 24db digital volume range to register digital volume range 254 to 0
-  this->tas5805m_raw_volume_max_ = (uint8_t) ((this->tas5805m_volume_max_ - 24) * -2);
-  this->tas5805m_raw_volume_min_ = (uint8_t) ((this->tas5805m_volume_min_ - 24) * -2);
+  this->tas5805m_raw_volume_max_ = (uint8_t)((this->tas5805m_volume_max_ - 24) * -2);
+  this->tas5805m_raw_volume_min_ = (uint8_t)((this->tas5805m_volume_min_ - 24) * -2);
 }
 
 bool Tas5805mComponent::configure_registers_() {
@@ -200,10 +200,10 @@ void Tas5805mComponent::update() {
 
   // is there a fault that should be cleared next update
   this->is_fault_to_clear_ =
-    (this->tas5805m_faults_.is_fault_except_clock_fault || (this->tas5805m_faults_.clock_fault && (!this->ignore_clock_faults_when_clearing_faults_)));
+     ( this->tas5805m_faults_.is_fault_except_clock_fault || (this->tas5805m_faults_.clock_fault && (!this->ignore_clock_faults_when_clearing_faults_)) );
 
   // if no change in faults bypass publishing
-  if (!(this->is_new_common_fault_ || this->is_new_over_temperature_issue_ || this->is_new_channel_fault_ || this->is_new_global_fault_)) return;
+   if ( !(this->is_new_common_fault_ || this->is_new_over_temperature_issue_ || this->is_new_channel_fault_ || this->is_new_global_fault_) ) return;
 
 #ifdef USE_TAS5805M_BINARY_SENSOR
   this->publish_faults_();
@@ -308,7 +308,8 @@ void Tas5805mComponent::dump_config() {
         MIXER_MODE_TEXT[this->tas5805m_mixer_mode_],
         this->tas5805m_volume_max_, this->tas5805m_volume_min_,
         this->ignore_clock_faults_when_clearing_faults_ ? "CLOCK FAULTS" : "NONE",
-        this->auto_refresh_ ? "BY SWITCH" : "BY GAIN");
+        this->auto_refresh_ ? "BY SWITCH" : "BY GAIN"
+      );
       LOG_UPDATE_INTERVAL(this);
       break;
   }
@@ -456,12 +457,16 @@ bool Tas5805mComponent::use_eq_switch_refresh() {
 float Tas5805mComponent::volume() {
   uint8_t raw_volume;
   this->get_digital_volume_(&raw_volume);
-  return remap<float, uint8_t>(raw_volume, this->tas5805m_raw_volume_min_, this->tas5805m_raw_volume_max_, 0.0f, 1.0f);
+  return remap<float, uint8_t>(raw_volume, this->tas5805m_raw_volume_min_,
+                                           this->tas5805m_raw_volume_max_,
+                                           0.0f, 1.0f);
 }
 
 bool Tas5805mComponent::set_volume(float volume) {
   float new_volume = clamp(volume, 0.0f, 1.0f);
-  uint8_t raw_volume = remap<uint8_t, float>(new_volume, 0.0f, 1.0f, this->tas5805m_raw_volume_min_, this->tas5805m_raw_volume_max_);
+  uint8_t raw_volume = remap<uint8_t, float>(new_volume, 0.0f, 1.0f,
+                                                         this->tas5805m_raw_volume_min_,
+                                                         this->tas5805m_raw_volume_max_);
   if (!this->set_digital_volume_(raw_volume)) return false;
 #if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERBOSE
   int8_t dB = -(raw_volume / 2) + 24;
@@ -473,7 +478,7 @@ bool Tas5805mComponent::set_volume(float volume) {
 
 // protected
 
-bool Tas5805mComponent::get_analog_gain_(uint8_t *raw_gain) {
+bool Tas5805mComponent::get_analog_gain_(uint8_t* raw_gain) {
   uint8_t current;
   if (!this->tas5805m_read_byte_(TAS5805M_AGAIN, &current)) return false;
   // remove top 3 reserved bits
@@ -503,7 +508,7 @@ bool Tas5805mComponent::set_analog_gain_(float gain_db) {
   return true;
 }
 
-bool Tas5805mComponent::get_dac_mode_(DacMode *mode) {
+bool Tas5805mComponent::get_dac_mode_(DacMode* mode) {
   uint8_t current_value;
   if (!this->tas5805m_read_byte_(TAS5805M_DEVICE_CTRL_1, &current_value)) return false;
   if (current_value & (1 << 2)) {
@@ -522,7 +527,7 @@ bool Tas5805mComponent::set_dac_mode_(DacMode mode) {
 
   // Update bit 2 based on the mode
   if (mode == PBTL) {
-    current_value |= (1 << 2); // Set bit 2 to 1 (PBTL mode)
+    current_value |= (1 << 2);  // Set bit 2 to 1 (PBTL mode)
   } else {
     current_value &= ~(1 << 2); // Clear bit 2 to 0 (BTL mode)
   }
@@ -564,7 +569,7 @@ bool Tas5805mComponent::set_deep_sleep_on_() {
   return true;
 }
 
-bool Tas5805mComponent::get_digital_volume_(uint8_t *raw_volume) {
+bool Tas5805mComponent::get_digital_volume_(uint8_t* raw_volume) {
   uint8_t current = 254; // lowest raw volume
   if (!this->tas5805m_read_byte_(TAS5805M_DIG_VOL_CTRL, &current)) return false;
   *raw_volume = current;
@@ -788,7 +793,7 @@ bool Tas5805mComponent::set_crossover_f(float crossover_frequency) {
   return this->set_book_and_page_(TAS5805M_REG_BOOK_CONTROL_PORT, TAS5805M_REG_PAGE_ZERO);
 }
 
-bool Tas5805mComponent::get_state_(ControlState *state) {
+bool Tas5805mComponent::get_state_(ControlState* state) {
   *state = this->tas5805m_control_state_;
   return true;
 }
@@ -801,7 +806,7 @@ bool Tas5805mComponent::set_state_(ControlState state) {
 }
 
 bool Tas5805mComponent::clear_fault_registers_() {
-  if (!this->tas5805m_write_byte_(TAS5805M_FAULT_CLEAR, TAS5805M_ANALOG_FAULT_CLEAR)) return false;
+  if (!this->tas5805m_write_byte_(0x78, 0x80)) return false;
   this->times_faults_cleared_++;
   ESP_LOGD(TAG, "Faults cleared");
   return true;
@@ -811,7 +816,11 @@ bool Tas5805mComponent::read_fault_registers_() {
   uint8_t current_faults[4];
 
   // read all faults registers
-  if (!this->tas5805m_read_bytes_(TAS5805M_CHAN_FAULT, current_faults, 4)) return false;
+  if (!this->tas5805m_read_bytes_(0x70, &current_faults[0], 4)) return false;
+  ESP_LOGW(TAG, "fault[0]: 0x%02X", current_faults[0]);
+  ESP_LOGW(TAG, "fault[1]: 0x%02X", current_faults[1]);
+  ESP_LOGW(TAG, "fault[2]: 0x%02X", current_faults[2]);
+  ESP_LOGW(TAG, "fault[3]: 0x%02X", current_faults[3]);
 
   // note: new state is saved regardless as it is not worth conditionally saving state based on whether state has changed
 
@@ -841,7 +850,8 @@ bool Tas5805mComponent::read_fault_registers_() {
   this->tas5805m_faults_.clock_fault = new_fault_state;
 
   this->tas5805m_faults_.is_fault_except_clock_fault =
-  (this->tas5805m_faults_.channel_fault || this->tas5805m_faults_.global_fault || this->tas5805m_faults_.temperature_fault || this->tas5805m_faults_.temperature_warning);
+    ( this->tas5805m_faults_.channel_fault || this->tas5805m_faults_.global_fault ||
+      this->tas5805m_faults_.temperature_fault || this->tas5805m_faults_.temperature_warning );
 
 #ifdef USE_TAS5805M_BINARY_SENSOR
   // process have_fault binary sensor
@@ -872,36 +882,43 @@ bool Tas5805mComponent::set_book_and_page_(uint8_t book, uint8_t page) {
   return true;
 }
 
-bool Tas5805mComponent::tas5805m_read_byte_(uint8_t a_register, uint8_t *data) {
+bool Tas5805mComponent::tas5805m_read_byte_(uint8_t a_register, uint8_t* data) {
   return this->tas5805m_read_bytes_(a_register, data, 1);
 }
 
-bool Tas5805mComponent::tas5805m_read_bytes_(uint8_t a_register, uint8_t *data, uint8_t number_bytes) {
+bool Tas5805mComponent::tas5805m_read_bytes_(uint8_t a_register, uint8_t* data, uint8_t number_bytes) {
   i2c::ErrorCode error_code;
   error_code = this->write(&a_register, 1);
   if (error_code != i2c::ERROR_OK) {
     ESP_LOGE(TAG, "Write error:: %i", error_code);
-    this->i2c_error_ = (uint8_t) error_code;
+    this->i2c_error_ = (uint8_t)error_code;
     return false;
   }
   error_code = this->read_register(a_register, data, number_bytes);
   if (error_code != i2c::ERROR_OK) {
     ESP_LOGE(TAG, "Read error: %i", error_code);
-    this->i2c_error_ = (uint8_t) error_code;
+    this->i2c_error_ = (uint8_t)error_code;
     return false;
   }
   return true;
 }
 
 bool Tas5805mComponent::tas5805m_write_byte_(uint8_t a_register, uint8_t data) {
-  return this->tas5805m_write_bytes_(a_register, &data, 1);
+  // return this->tas5805m_write_bytes_(a_register, &data, 1);
+  i2c::ErrorCode error_code = this->write_register(a_register, &data, 1);
+  if (error_code != i2c::ERROR_OK) {
+    ESP_LOGE(TAG, "Write error: %i", error_code);
+    this->i2c_error_ = (uint8_t)error_code;
+    return false;
+  }
+  return true;
 }
 
-bool Tas5805mComponent::tas5805m_write_bytes_(uint8_t a_register, uint8_t *data, uint8_t len) {
+bool Tas5805mComponent::tas5805m_write_bytes_(uint8_t a_register, uint8_t* data, uint8_t len) {
   i2c::ErrorCode error_code = this->write_register(a_register, data, len);
   if (error_code != i2c::ERROR_OK) {
     ESP_LOGE(TAG, "Write error: %i", error_code);
-    this->i2c_error_ = (uint8_t) error_code;
+    this->i2c_error_ = (uint8_t)error_code;
     return false;
   }
   return true;
