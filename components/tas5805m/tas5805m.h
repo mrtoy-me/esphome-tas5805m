@@ -49,12 +49,12 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
     this->ignore_clock_faults_when_clearing_faults_ = (ignore_fault_mode == ExcludeIgnoreMode::CLOCK_FAULT);
   }
 
-  void config_mixer_mode(MixerMode mixer_mode) { this->tas5805m_mixer_mode_ = mixer_mode; }
+  void config_mixer_mode(MixerMode mixer_mode) {this->tas5805m_mixer_mode_ = mixer_mode; }
 
   void config_refresh_eq(AutoRefreshMode auto_refresh) { this->auto_refresh_ = auto_refresh; }
 
-  void config_volume_max(float volume_max) { this->tas5805m_volume_max_ = (int8_t)(volume_max); }
-  void config_volume_min(float volume_min) { this->tas5805m_volume_min_ = (int8_t)(volume_min); }
+  void config_volume_max(float volume_max) {this->tas5805m_volume_max_ = (int8_t)(volume_max); }
+  void config_volume_min(float volume_min) {this->tas5805m_volume_min_ = (int8_t)(volume_min); }
 
   #ifdef USE_TAS5805M_BINARY_SENSOR
   SUB_BINARY_SENSOR(have_fault)
@@ -117,10 +117,11 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
    bool set_digital_volume_(uint8_t new_volume);
 
    #ifdef USE_TAS5805M_EQ
-   bool get_eq_(EqMode* current_mode);
+   bool get_eq_(bool* enabled);
    #endif
 
-   bool set_eq_(EqMode new_mode);
+   bool set_eq_on_();
+   bool set_eq_off_();
 
    bool get_mixer_mode_(MixerMode *mode);
    bool set_mixer_mode_(MixerMode mode);
@@ -171,7 +172,7 @@ class Tas5805mComponent : public audio_dac::AudioDac, public PollingComponent, p
 
    // used if eq gain numbers are defined in YAML
    #ifdef USE_TAS5805M_EQ
-   EqMode tas5805m_eq_mode_{EQ_OFF};
+   bool tas5805m_eq_enabled_;
    int8_t tas5805m_eq_gain_[NUMBER_EQ_BANDS]{0};
    #endif
 

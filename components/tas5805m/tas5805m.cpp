@@ -6,12 +6,7 @@
 
 namespace esphome::tas5805m {
 
-#ifdef USE_TAS5805M_DAC
 static const char *const TAG               = "tas5805m";
-#else
-static const char *const TAG               = "tas5825m";
-#endif
-
 static const char *const ERROR             = "Error ";
 static const char *const MIXER_MODE        = "Mixer Mode";
 static const char *const EQ_BAND           = "EQ Band ";
@@ -34,9 +29,8 @@ void Tas5805mComponent::setup() {
   if (this->enable_pin_ != nullptr) {
     this->enable_pin_->setup();
     this->enable_pin_->digital_write(false);
-    delay(1);
+    delay(10);
     this->enable_pin_->digital_write(true);
-    delay(5);
   }
 
   if (!this->configure_registers_()) {
@@ -70,7 +64,7 @@ bool Tas5805mComponent::configure_registers_() {
   this->number_registers_configured_ = counter;
 
   // enable Tas5805m
-  if(!this->set_deep_sleep_off_()) return false;
+  if (!this->set_deep_sleep_off_()) return false;
 
   // only setup once here
   if (!this->set_dac_mode_(this->tas5805m_dac_mode_)) return false;
@@ -166,7 +160,7 @@ void Tas5805mComponent::update() {
     uint32_t current_time = millis();
     this->update_delay_finished_ = ((current_time - this->start_time_) > INITIAL_UPDATE_DELAY);
 
-    if(!this->update_delay_finished_) return;
+    if (!this->update_delay_finished_) return;
 
     // finished delay so clear faults
     if (!this->tas5805m_write_byte_(TAS5805M_FAULT_CLEAR, TAS5805M_ANALOG_FAULT_CLEAR)) {
@@ -232,8 +226,7 @@ void Tas5805mComponent::publish_faults_() {
   // publish channel and global faults in separate loop iterations to spread component time when publishing binary sensors
   if (this->is_new_channel_fault_) {
     this->set_timeout("", 15, [this]() { this->publish_channel_faults_(); });
-  }
-  else {
+  } else {
     if (this->is_new_global_fault_) {
       this->set_timeout("", 15, [this]() { this->publish_global_faults_(); });
     }
@@ -283,19 +276,15 @@ void Tas5805mComponent::publish_global_faults_() {
 #endif
 
 void Tas5805mComponent::dump_config() {
-  #ifdef USE_TAS5805M_DAC
   ESP_LOGCONFIG(TAG, "Tas5805m Audio Dac:");
-  #else
-  ESP_LOGCONFIG(TAG, "Tas5825m Audio Dac:");
-  #endif
 
   switch (this->error_code_) {
     case CONFIGURATION_FAILED:
-      ESP_LOGE(TAG, "  %s setup failed: %i", ERROR, this->i2c_error_);
+      ESP_LOGE(TAG, "  %s setting up Tas5805m: %i", ERROR, this->i2c_error_);
       break;
     case NONE:
-      LOG_I2C_DEVICE(this);
       LOG_PIN("  Enable Pin: ", this->enable_pin_);
+      LOG_I2C_DEVICE(this);
       ESP_LOGCONFIG(TAG,
               "  Registers Configured: %i\n"
               "  Analog Gain: %3.1fdB\n"
@@ -346,7 +335,7 @@ void Tas5805mComponent::enable_dac(bool enable) {
 // used by 'enable_eq_switch'
 bool Tas5805mComponent::enable_eq(bool enable) {
   #ifdef USE_TAS5805M_EQ
-  enable ? this->set_eq_(EQ_ON) : this->set_eq_(EQ_OFF);
+  enable ? this->set_eq_on_() : this->set_eq_off_();
   #endif
   return true;
 }
@@ -371,59 +360,38 @@ bool Tas5805mComponent::set_eq_gain(uint8_t band, int8_t gain) {
 
   // runs when 'refresh_settings_triggered_' is true
 
-  ESP_LOGV(TAG, "Set %s%d Gain >> %ddB", EQ_BAND, band, gain);
+  ESP_LOGV(TAG, "Set %s%d Gain: %ddB", EQ_BAND, band, gain);
 
   uint8_t x = (gain + TAS5805M_EQ_MAX_DB);
 
-  #ifdef USE_TAS5805M_DAC
-  const AddressSequenceEq* eq_address = &TAS5805M_EQ_ADDRESS[band];
-  #else
-  const AddressSequenceEq* eq_address = &TAS5825M_EQ_ADDRESS[band];
-  #endif
-
   const RegisterSequenceEq* reg_value = &TAS5805M_EQ_REGISTERS[x][band];
-
-  if ((reg_value == NULL) || (eq_address == NULL)) {
-    ESP_LOGE(TAG, "%sNULL discovered: [%d][%d]",ERROR, x, band);
+  if (reg_value == NULL) {
+    ESP_LOGE(TAG, "%sNULL@eq_registers[%d][%d]",ERROR, x, band);
     return false;
   }
 
-  if(!this->set_book_and_page_(TAS5805M_REG_BOOK_EQ, eq_address->page)) {
-    ESP_LOGE(TAG, "%s%s%d @ page 0x%02X", ERROR, EQ_BAND, band, eq_address->page);
+  if(!this->set_book_and_page_(TAS5805M_REG_BOOK_EQ, reg_value->page)) {
+    ESP_LOGE(TAG, "%s%s%d @ page 0x%02X", ERROR, EQ_BAND, band, reg_value->page);
     return false;
   }
 
-  uint8_t bytes_in_block1{COEFFICENTS_PER_EQ_BAND};
-  uint8_t bytes_in_block2{0};
-
-  if ((eq_address->offset + COEFFICENTS_PER_EQ_BAND) > MAX_OFFSET_PLUS1) {
-    bytes_in_block1 = MAX_OFFSET_PLUS1 - eq_address->offset;
-    bytes_in_block2 = COEFFICENTS_PER_EQ_BAND - bytes_in_block1;
+  if(!this->tas5805m_write_bytes_(reg_value->offset1, const_cast<uint8_t *>(reg_value->value), reg_value->bytes_in_block1)) {
+    ESP_LOGE(TAG, "%s%s%d Gain: offset 0x%02X for %d bytes", ERROR, EQ_BAND, band, reg_value->offset1, reg_value->bytes_in_block1);
   }
 
-  // should not be needed as previous condition would exclude
-  if (bytes_in_block1 > COEFFICENTS_PER_EQ_BAND) {
-    ESP_LOGE(TAG, "%s%s %d invalid first block size: %d", ERROR, EQ_BAND, band, bytes_in_block1);
-    return false;
-  }
-
-  ESP_LOGVV(TAG, "Write EQ Band: %d gain: %ddb to page: 0x%02X, offset: 0x%02X, block1: %d, block2: %d ", band, gain, eq_address->page, eq_address->offset, bytes_in_block1, bytes_in_block2);
-
-  if(!this->tas5805m_write_bytes_(eq_address->offset, const_cast<uint8_t *>(reg_value->value), bytes_in_block1)) {
-    ESP_LOGE(TAG, "%s%s%d Gain: offset 0x%02X for %d bytes", ERROR, EQ_BAND, band, eq_address->offset, bytes_in_block1);
-  }
-
+  uint8_t bytes_in_block2 = COEFFICENTS_PER_EQ_BAND - reg_value->bytes_in_block1;
   if (bytes_in_block2 != 0) {
-    uint8_t next_page = eq_address->page + 1;
+    uint8_t next_page = reg_value->page + 1;
     if(!this->set_book_and_page_(TAS5805M_REG_BOOK_EQ, next_page)) {
       ESP_LOGE(TAG, "%s%s%d @ page 0x%02X", ERROR, EQ_BAND, band, next_page);
       return false;
     }
-    if(!this->tas5805m_write_bytes_(NEXT_PAGE_OFFSET, const_cast<uint8_t *>(reg_value->value + bytes_in_block1), bytes_in_block2)) {
-      ESP_LOGE(TAG, "%s%s%d Gain: offset 0x%02X for %d bytes", ERROR, EQ_BAND, band, NEXT_PAGE_OFFSET, bytes_in_block2);
+    if(!this->tas5805m_write_bytes_(reg_value->offset2, const_cast<uint8_t *>(reg_value->value + reg_value->bytes_in_block1), bytes_in_block2)) {
+      ESP_LOGE(TAG, "%s%s%d Gain: offset 0x%02X for %d bytes", ERROR, EQ_BAND, band, reg_value->offset2, bytes_in_block2);
       return false;
     }
   }
+
   return this->set_book_and_page_(TAS5805M_REG_BOOK_CONTROL_PORT, TAS5805M_REG_PAGE_ZERO);
 }
 #endif
@@ -459,7 +427,7 @@ void Tas5805mComponent::refresh_settings() {
   this->refresh_settings_triggered_ = true;
 
   #ifdef USE_TAS5805M_EQ
-  ESP_LOGD(TAG, "EQ Refresh triggered");
+  ESP_LOGD(TAG, "Refresh triggered: EQ %s", this->tas5805m_eq_enabled_ ? "Enabled" : "Disabled");
   #endif
   return;
 }
@@ -496,7 +464,7 @@ bool Tas5805mComponent::set_volume(float volume) {
   if (!this->set_digital_volume_(raw_volume)) return false;
   #if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERBOSE
     int8_t dB = -(raw_volume / 2) + 24;
-    ESP_LOGV(TAG, "Volume: >> %idB", dB);
+    ESP_LOGV(TAG, "Volume: %idB", dB);
   #endif
   return true;
 }
@@ -530,7 +498,7 @@ bool Tas5805mComponent::set_analog_gain_(float gain_db) {
   new_again = (current_again & 0xE0) | new_again;
   if (!this->tas5805m_write_byte_(TAS5805M_AGAIN, new_again)) return false;
 
-  ESP_LOGD(TAG, "Analog Gain >> %fdB", gain_db);
+  ESP_LOGD(TAG, "Analog Gain: %fdB", gain_db);
   return true;
 }
 
@@ -553,16 +521,16 @@ bool Tas5805mComponent::set_dac_mode_(DacMode mode) {
 
   // Update bit 2 based on the mode
   if (mode == PBTL) {
-      current_value |= (1 << 2);  // Set bit 2 to 1 (PBTL mode)
+    current_value |= (1 << 2);  // Set bit 2 to 1 (PBTL mode)
   } else {
-      current_value &= ~(1 << 2); // Clear bit 2 to 0 (BTL mode)
+    current_value &= ~(1 << 2); // Clear bit 2 to 0 (BTL mode)
   }
   if (!this->tas5805m_write_byte_(TAS5805M_DEVICE_CTRL_1, current_value)) return false;
 
   // 'tas5805m_state_' global already has dac mode from YAML config
   // save anyway so 'set_dac_mode' could be used more generally
   this->tas5805m_dac_mode_ = mode;
-  ESP_LOGD(TAG, "DAC mode >> %s", this->tas5805m_dac_mode_ ? "PBTL" : "BTL");
+  ESP_LOGD(TAG, "DAC mode: %s", this->tas5805m_dac_mode_ ? "PBTL" : "BTL");
   return true;
 }
 
@@ -573,7 +541,7 @@ bool Tas5805mComponent::set_deep_sleep_off_() {
   if (!this->tas5805m_write_byte_(TAS5805M_DEVICE_CTRL_2, new_value)) return false;
 
   this->tas5805m_control_state_ = CTRL_PLAY;                        // set Control State to play
-  ESP_LOGV(TAG, "Deep Sleep >> Off");
+  ESP_LOGV(TAG, "Deep Sleep Off");
   #if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERBOSE
   if (this->is_muted_) ESP_LOGV(TAG, "Mute On preserved");
   #endif
@@ -588,7 +556,7 @@ bool Tas5805mComponent::set_deep_sleep_on_() {
   if (!this->tas5805m_write_byte_(TAS5805M_DEVICE_CTRL_2, new_value)) return false;
 
   this->tas5805m_control_state_ = CTRL_DEEP_SLEEP;                   // set Control State to deep sleep
-  ESP_LOGV(TAG, "Deep Sleep >> On");
+  ESP_LOGV(TAG, "Deep Sleep On");
   #if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERBOSE
   if (this->is_muted_) ESP_LOGD(TAG, "Mute On preserved");
   #endif
@@ -597,7 +565,7 @@ bool Tas5805mComponent::set_deep_sleep_on_() {
 
 bool Tas5805mComponent::get_digital_volume_(uint8_t* raw_volume) {
   uint8_t current = 254; // lowest raw volume
-  if(!this->tas5805m_read_byte_(TAS5805M_DIG_VOL_CTRL, &current)) return false;
+  if (!this->tas5805m_read_byte_(TAS5805M_DIG_VOL_CTRL, &current)) return false;
   *raw_volume = current;
   return true;
 }
@@ -617,43 +585,31 @@ bool Tas5805mComponent::set_digital_volume_(uint8_t raw_volume) {
 }
 
 #ifdef USE_TAS5805M_EQ
-// return value of protected variable rather than read current mode; does not matter since not currently used
-bool Tas5805mComponent::get_eq_(EqMode* current_mode) {
-  *current_mode = this->tas5805m_eq_mode_;
+bool Tas5805mComponent::get_eq_(bool* enabled) {
+  uint8_t current_value;
+  if (!this->tas5805m_read_byte_(TAS5805M_DSP_MISC, &current_value)) return false;
+  *enabled = !(current_value & 0x01);
+  this->tas5805m_eq_enabled_ = *enabled;
   return true;
 }
 #endif
 
-bool Tas5805mComponent::set_eq_(EqMode new_mode) {
+bool Tas5805mComponent::set_eq_off_() {
   #ifdef USE_TAS5805M_EQ
-  if (this->tas5805m_eq_mode_ == new_mode) return true;
-
-  #ifdef USE_TAS5805M_DAC
-  if (!this->tas5805m_write_byte_(TAS5805M_DSP_MISC, TAS5805M_CTRL_EQ[new_mode])) return false;
-  #else
-  // USE_TAS5825M_DAC
-   if(!this->set_book_and_page_(TAS5825M_EQ_CTRL_BOOK, TAS5825M_EQ_CTRL_PAGE)) {
-    ESP_LOGE(TAG, "%s on book and page set for EQ control", ERROR);
-    return false;
-  }
-
-  if (!this->tas5805m_write_bytes_(TAS5825M_GANG_EQ , reinterpret_cast<uint8_t *>(const_cast<uint32_t*>(&TAS5825M_CTRL_GANGED_EQ[new_mode])), 4)) {
-    ESP_LOGE(TAG, "%s writing EQ Ganged", ERROR);
-    return false;
-  }
-
-  if (!this->tas5805m_write_bytes_(TAS5825M_BYPASS_EQ, reinterpret_cast<uint8_t *>(const_cast<uint32_t*>(&TAS5825M_CTRL_BYPASS_EQ[new_mode])), 4)) {
-    ESP_LOGE(TAG, "%s writing EQ on", ERROR);
-    return false;
-  }
-  if (!this->set_book_and_page_(TAS5805M_REG_BOOK_CONTROL_PORT, TAS5805M_REG_PAGE_ZERO)) {
-    ESP_LOGE(TAG, "%s on book and page reset", ERROR);
-    return false;
-  }
+  if (!this->tas5805m_eq_enabled_) return true;
+  if (!this->tas5805m_write_byte_(TAS5805M_DSP_MISC, TAS5805M_CTRL_EQ_OFF)) return false;
+  this->tas5805m_eq_enabled_ = false;
+  ESP_LOGV(TAG, "EQ control Off");
   #endif
+  return true;
+}
 
-  this->tas5805m_eq_mode_ = new_mode;
-  ESP_LOGV(TAG, "EQ mode >> %S", EQ_MODE_TEXT[new_mode]);
+bool Tas5805mComponent::set_eq_on_() {
+  #ifdef USE_TAS5805M_EQ
+  if (this->tas5805m_eq_enabled_) return true;
+  if (!this->tas5805m_write_byte_(TAS5805M_DSP_MISC, TAS5805M_CTRL_EQ_ON)) return false;
+  this->tas5805m_eq_enabled_ = true;
+  ESP_LOGV(TAG, "EQ control On");
   #endif
   return true;
 }
@@ -742,7 +698,7 @@ bool Tas5805mComponent::set_mixer_mode_(MixerMode mode) {
   // 'tas5805m_state_' global already has mixer mode from YAML config
   // save anyway so 'set_mixer_mode' could be used more generally in future
   this->tas5805m_mixer_mode_ = mode;
-  ESP_LOGD(TAG, "%s >> %s", MIXER_MODE, MIXER_MODE_TEXT[this->tas5805m_mixer_mode_]);
+  ESP_LOGD(TAG, "%s: %s", MIXER_MODE, MIXER_MODE_TEXT[this->tas5805m_mixer_mode_]);
   return true;
 }
 
