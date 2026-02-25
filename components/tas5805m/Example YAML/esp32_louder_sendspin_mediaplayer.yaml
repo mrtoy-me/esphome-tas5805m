@@ -3,6 +3,12 @@
 # NOTE External componeny references and YAML config will change as software deveopment progresses
 # NOTE see https://github.com/esphome/home-assistant-voice-pe-alpha/blob/alpha/home-assistant-voice.yaml
 
+substitutions:
+  sync_dac_i2s_sound: "https://github.com/mrtoy-me/esphome-tas5805m/raw/main/components/tas5805m/tas5805m_boot_louder.flac"
+
+  #use instead if you don't want an audible boot sound
+  #sync_dac_i2s_sound: "https://github.com/mrtoy-me/esphome-tas5805m/raw/main/components/tas5805m/silent_boot.flac"
+
 esphome:
   name: louder-rover
   friendly_name: Louder Rover
@@ -219,7 +225,7 @@ media_source:
     id: file_source
     files:
       id: startup_sync_sound
-      file: https://github.com/mrtoy-me/esphome-tas5805m/raw/main/components/tas5805m/tas5805m_boot_louder.flac
+      file: file: ${sync_dac_i2s_sound}
 
 media_player:
   - platform: sendspin

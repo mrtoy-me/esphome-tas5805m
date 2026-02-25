@@ -132,14 +132,25 @@ The typical way of handling this requirement is where speaker mediaplayer compon
 is configured to play audio during boot. In this case, a short sound file is
 configured under **mediaplayer:** and configuration added under **esphome:**
 to play that short sound at the correct point in the boot process.
+Two alternative flac sound files are provided which have a duration of about 0.5 second.
+The Example YAML files provided have a substition at the start as follows.
+Simply comment out the sound file not required.
+You can use your own boot sound, simply create a flac file of about 0.5 second duration and
+reference it appropriately in the YAML substitution.
+```
+substitutions:
+  sync_dac_i2s_sound: "https://github.com/mrtoy-me/esphome-tas5805m/raw/main/components/tas5805m/tas5805m_boot_louder.flac"
 
-Configuration required to be included under **mediaplayer:** YAML is:
+  #use instead if you don't want an audible boot sound
+  #sync_dac_i2s_sound: "https://github.com/mrtoy-me/esphome-tas5805m/raw/main/components/tas5805m/silent_boot.flac"
+
+The YAML configuration required under **mediaplayer:** to reference this file is:
 ```
 files:
-    id: startup_sync_sound
-    file: https://github.com/mrtoy-me/esphome-tas5805m/raw/main/components/tas5805m/boot_louder.flac
+      id: startup_sync_sound
+      file: file: ${sync_dac_i2s_sound}
 ```
-Configuration required to be included under **esphome:** YAML:
+YAML Configuration required to be included under **esphome:** YAML:
 ```
 on_boot:
     priority: 220.0
